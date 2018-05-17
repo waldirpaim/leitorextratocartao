@@ -60,7 +60,7 @@ implementation
 procedure TFrmPrincipal.btAbrirClick(Sender: TObject);
 var
   VParcela: TParcela;
-  VConcilia: TLeitorExtratoCartao;
+  VLeitor: TLeitorExtratoCartao;
 begin
   if OpenDialog1.Execute then
   begin
@@ -68,12 +68,12 @@ begin
     if not cdsParcelas.Active then
       cdsParcelas.Active := True;
     cdsParcelas.EmptyDataSet;
-    VConcilia := TLeitorExtratoCartao.Create;
+    VLeitor := TLeitorExtratoCartao.Create;
     cdsParcelas.DisableControls;
     try
-      VConcilia.TipoOperadora := TTipoOperadora(cbConciliacao.ItemIndex);
-      VConcilia.LerArquivoOperadora(edArquivo.Text);
-      for VParcela in VConcilia.Operadora.Parcelas do
+      VLeitor.TipoOperadora := TTipoOperadora(cbConciliacao.ItemIndex);
+      VLeitor.LerArquivo(edArquivo.Text);
+      for VParcela in VLeitor.Operadora.Parcelas do
       begin
         cdsParcelas.Append;
         cdsParcelasDataVenda.Value := VParcela.DataVenda;
@@ -89,7 +89,7 @@ begin
       end;
       cdsParcelas.First;
     finally
-      VConcilia.Free;
+      VLeitor.Free;
       cdsParcelas.EnableControls;
     end;
   end;
