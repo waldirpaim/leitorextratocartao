@@ -68,7 +68,7 @@ begin
     if not cdsParcelas.Active then
       cdsParcelas.Active := True;
     cdsParcelas.EmptyDataSet;
-    VConcilia := TLeitorExtratoCartao.Create(nil);
+    VConcilia := TLeitorExtratoCartao.Create;
     cdsParcelas.DisableControls;
     try
       VConcilia.TipoOperadora := TTipoOperadora(cbConciliacao.ItemIndex);
@@ -107,4 +107,3 @@ begin
 end;
 
 end.
-

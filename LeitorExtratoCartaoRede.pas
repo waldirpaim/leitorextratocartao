@@ -8,15 +8,15 @@ uses
   LeitorExtratoCartao;
 
 type
-  { TLeitorExtratoCartaoRede}
+  { TLeitorExtratoCartaoRede }
 
   TLeitorExtratoCartaoRede = class(TOperadoraCartao)
   private
     procedure Layout1(ARetorno: TStrings);
   public
     constructor Create(AOwner: TLeitorExtratoCartao);
-    procedure LerArquivoOperadora(const ANomeArq: string); override;
-    function ValidaArquivoOperadora(ARetorno: TStringList): Integer; override;
+    procedure LerExtrato(const ANomeArq: string); override;
+    function ValidaArquivo(ARetorno: TStrings): Integer; override;
   end;
 
 implementation
@@ -63,16 +63,16 @@ begin
   end;
 end;
 
-procedure TLeitorExtratoCartaoRede.LerArquivoOperadora(const ANomeArq: string);
+procedure TLeitorExtratoCartaoRede.LerExtrato(const ANomeArq: string);
 var
   VRetorno: TStringList;
 begin
-  inherited LerArquivoOperadora(ANomeArq);
+  inherited LerExtrato(ANomeArq);
   VRetorno := TStringList.Create;
   try
     VRetorno.LoadFromFile(ANomeArq);
 
-    case ValidaArquivoOperadora(VRetorno) of
+    case ValidaArquivo(VRetorno) of
       1:
         Layout1(VRetorno);
     else
@@ -84,7 +84,7 @@ begin
   end;
 end;
 
-function TLeitorExtratoCartaoRede.ValidaArquivoOperadora(ARetorno: TStringList): Integer;
+function TLeitorExtratoCartaoRede.ValidaArquivo(ARetorno: TStrings): Integer;
 begin
   if SameText(Copy(ARetorno[0], 1, 14), 'Extrato Rede -') then
     Exit(1);
@@ -92,4 +92,3 @@ begin
 end;
 
 end.
-

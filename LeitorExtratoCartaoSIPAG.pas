@@ -8,7 +8,7 @@ uses
   LeitorExtratoCartao;
 
 type
-  { TLeitorExtratoCartaoSIPAG}
+  { TLeitorExtratoCartaoSIPAG }
 
   TLeitorExtratoCartaoSIPAG = class(TOperadoraCartao)
   private
@@ -16,8 +16,8 @@ type
     function TestaEstruturaArquivo(AList: TStrings): Boolean;
   public
     constructor create(AOwner: TLeitorExtratoCartao);
-    procedure LerArquivoOperadora(const ANomeArq: string); override;
-    function ValidaArquivoOperadora(ARetorno: TStringList): Integer; override;
+    procedure LerExtrato(const ANomeArq: string); override;
+    function ValidaArquivo(ARetorno: TStrings): Integer; override;
   end;
 
 implementation
@@ -25,7 +25,7 @@ implementation
 resourcestring
   SARQUIVO_FORA_FORMATO = 'Arquivo %s não está no formato esperado.';
 
-{ TCBrOperadoraSIPAG }
+  { TCBrOperadoraSIPAG }
 
 constructor TLeitorExtratoCartaoSIPAG.create(AOwner: TLeitorExtratoCartao);
 begin
@@ -65,7 +65,8 @@ begin
   end;
 end;
 
-function TLeitorExtratoCartaoSIPAG.TestaEstruturaArquivo(AList: TStrings): Boolean;
+function TLeitorExtratoCartaoSIPAG.TestaEstruturaArquivo
+  (AList: TStrings): Boolean;
 var
   S: string;
 begin
@@ -75,12 +76,12 @@ begin
   Result := False;
 end;
 
-procedure TLeitorExtratoCartaoSIPAG.LerArquivoOperadora(const ANomeArq: string);
+procedure TLeitorExtratoCartaoSIPAG.LerExtrato(const ANomeArq: string);
 var
   VRetorno: TStringList;
 begin
-  inherited LerArquivoOperadora(ANomeArq);
-  VRetorno := TStringList.Create;
+  inherited LerExtrato(ANomeArq);
+  VRetorno := TStringList.create;
   VRetorno.Delimiter := ',';
   VRetorno.DelimitedText := '"';
   try
@@ -88,7 +89,7 @@ begin
     if not TestaEstruturaArquivo(VRetorno) then
       raise Exception.CreateResFmt(@SARQUIVO_FORA_FORMATO, [ANomeArq]);
 
-    case ValidaArquivoOperadora(VRetorno) of
+    case ValidaArquivo(VRetorno) of
       1:
         Layout1(VRetorno);
     else
@@ -100,10 +101,9 @@ begin
   end;
 end;
 
-function TLeitorExtratoCartaoSIPAG.ValidaArquivoOperadora(ARetorno: TStringList): Integer;
+function TLeitorExtratoCartaoSIPAG.ValidaArquivo(ARetorno: TStrings): Integer;
 begin
   Result := 1;
 end;
 
 end.
-

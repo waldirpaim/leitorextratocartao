@@ -8,7 +8,7 @@ uses
   LeitorExtratoCartao;
 
 type
-  { TLeitorExtratoCartaoCielo}
+  { TLeitorExtratoCartaoCielo }
 
   TLeitorExtratoCartaoCielo = class(TOperadoraCartao)
   protected
@@ -17,8 +17,8 @@ type
     procedure Layout2(ARetorno: TStrings);
   public
     constructor Create(AOwner: TLeitorExtratoCartao);
-    procedure LerArquivoOperadora(const ANomeArq: string); override;
-    function ValidaArquivoOperadora(ARetorno: TStringList): Integer; override;
+    procedure LerExtrato(const ANomeArq: string); override;
+    function ValidaArquivo(ARetorno: TStrings): Integer; override;
   end;
 
 implementation
@@ -94,16 +94,16 @@ begin
   end;
 end;
 
-procedure TLeitorExtratoCartaoCielo.LerArquivoOperadora(const ANomeArq: string);
+procedure TLeitorExtratoCartaoCielo.LerExtrato(const ANomeArq: string);
 var
   VRetorno: TStringList;
 begin
-  inherited LerArquivoOperadora(ANomeArq);
+  inherited LerExtrato(ANomeArq);
   VRetorno := TStringList.Create;
   try
     VRetorno.LoadFromFile(ANomeArq);
 
-    case ValidaArquivoOperadora(VRetorno) of
+    case ValidaArquivo(VRetorno) of
       1:
         Layout1(VRetorno);
       2:
@@ -117,7 +117,7 @@ begin
   end;
 end;
 
-function TLeitorExtratoCartaoCielo.ValidaArquivoOperadora(ARetorno: TStringList): Integer;
+function TLeitorExtratoCartaoCielo.ValidaArquivo(ARetorno: TStrings): Integer;
 begin
   if (SameText(Copy(Trim(ARetorno[0].Replace('"', '')), 1, 8), 'Período:')) then
     Exit(1);
@@ -127,4 +127,3 @@ begin
 end;
 
 end.
-

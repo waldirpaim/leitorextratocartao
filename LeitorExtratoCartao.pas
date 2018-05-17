@@ -25,28 +25,24 @@ type
 
   TOperadoraCartao = class
   private
-    procedure ErroAbstract(const AError: string);
     function GetNome: string;
-    procedure SetNome(const Value: string);
   protected
     FOwner: TLeitorExtratoCartao;
     fNome: string;
     FShortDateFormat: string;
     fListadeParcelas: TListadeParcelas;
-    procedure CarregaItem(const Alinha: string; ALista: TStringList; const
-      QuoteChar: Char = '"'; Delimiter: Char = ';'); virtual;
+    procedure CarregaItem(const Alinha: string; ALista: TStrings;
+      const QuoteChar: Char = '"'; Delimiter: Char = ';'); virtual;
     function StrToData(const AText: string): TDateTime; virtual;
     function StringToFloat(const AText: string): Extended; virtual;
   public
     constructor Create(AOwner: TLeitorExtratoCartao);
     function CriarParcelaNaLista: TParcela; virtual;
     function Parcelas: TListadeParcelas;
-    procedure LerArquivoOperadora(const ANomeArq: string); virtual;
-    function ValidaArquivoOperadora(ARetorno: TStringList): Integer; virtual;
-    property Nome: string read GetNome write SetNome stored False;
+    procedure LerExtrato(const ANomeArq: string); virtual;
+    function ValidaArquivo(AExtrato: TStrings): Integer; virtual;
+    property Nome: string read GetNome;
   end;
-
-  { TParcela }
 
   TParcela = class
   private
@@ -74,44 +70,37 @@ type
     property CodAutorizacao: string read fCodAutorizacao write fCodAutorizacao;
     property ValorBruto: Extended read fValorBruto write fValorBruto;
     property ValorDesconto: Extended read FValorDesconto write FValorDesconto;
-    property ValorLiquido: Extended read FValorLiquido write FValorLiquido;
+    property ValorLiquido: Extended read fValorLiquido write fValorLiquido;
   end;
 
-  { TListadeParcelas }
   TListadeParcelas = class(TObjectList<TParcela>);
 
-  TLeitorExtratoCartao = class(TComponent)
+  TLeitorExtratoCartao = class
   private
     FOperadora: TOperadoraCartao;
     FTipoOperadora: TTipoOperadora;
     function GetAbout: string;
-    procedure SetAbout(const AValue: string);
     procedure setTipoOperadora(const Value: TTipoOperadora);
-  protected
-    procedure Notification(AComponent: TComponent; Operation: TOperation); override;
   public
-    constructor Create(AOwner: TComponent); override;
+    constructor Create;
     destructor Destroy; override;
     procedure LerArquivoOperadora(const ANomeArq: string);
     function Operadora: TOperadoraCartao;
-    property TipoOperadora: TTipoOperadora read FTipoOperadora write setTipoOperadora;
-  published
-    property About: string read GetAbout write SetAbout stored False;
+    property About: string read GetAbout;
+    property TipoOperadora: TTipoOperadora read FTipoOperadora
+      write setTipoOperadora;
   end;
 
 const
-  TipoConciliacaoStr: array[TTipoOperadora] of string = ('extNenhum', 'extCielo',
-    'extRede', 'extSIPAG');
+  TipoConciliacaoStr: array [TTipoOperadora] of string = ('extNenhum',
+    'extCielo', 'extRede', 'extSIPAG');
 
 resourcestring
-  SFUNCAO_NAO_IMPLEMENTADA = 'Função %s não implementada %s Para a operadora %s';
-  SAOWNER_DEVE_SER_DO_TIPO = 'Aowner deve ser do tipo TLeitorExtratoCartao';
+  SFUNCAO_NAO_IMPLEMENTADA =
+    'Função %s não implementada %s Para a operadora %s';
   SLAYOUT_ARQUIVO_NAO_DEFINIDO = 'Layout do arquivo não definido';
-  SSEM_DADOS_PROCESSAR = 'O Arquivo de extrato do cartão %s%s %s%s';
-  SARQUIVO_VAZIO = 'Está vazio e não há dados para processar';
-  SARQUIVO_INVALIDO = 'Está inválido';
-  SARQUIVO_CONCILICAO = 'Arquivo de concicliação %s';
-  SINFORMAR_NOME_ARQ_CONCILICAO = 'Nome do arquivo de extrato do cartão deve ser informado';
+  SINFORMAR_NOME_ARQ_CONCILICAO =
+    'Nome do arquivo de extrato do cartão deve ser informado';
   SNOME_ARQ_NAO_ENCONTRADO = 'Arquivo %s não encontrado: %s%s';
 
 implementation
@@ -121,16 +110,11 @@ uses
   LeitorExtratoCartaoRede,
   LeitorExtratoCartaoSIPAG;
 
-procedure Register;
-begin
-  RegisterComponents('LeitorExtratoCartao', [TLeitorExtratoCartao]);
-end;
-
 { TLeitorExtratoCartao }
 
-constructor TLeitorExtratoCartao.Create(AOwner: TComponent);
+constructor TLeitorExtratoCartao.Create;
 begin
-  inherited Create(AOwner);
+  inherited Create;
   TipoOperadora := extNenhum;
 end;
 
@@ -148,22 +132,12 @@ end;
 
 procedure TLeitorExtratoCartao.LerArquivoOperadora(const ANomeArq: string);
 begin
-  FOperadora.LerArquivoOperadora(ANomeArq);
-end;
-
-procedure TLeitorExtratoCartao.Notification(AComponent: TComponent; Operation: TOperation);
-begin
-  inherited Notification(AComponent, Operation);
+  FOperadora.LerExtrato(ANomeArq);
 end;
 
 function TLeitorExtratoCartao.Operadora: TOperadoraCartao;
 begin
   Result := FOperadora;
-end;
-
-procedure TLeitorExtratoCartao.SetAbout(const AValue: string);
-begin
- {}
 end;
 
 procedure TLeitorExtratoCartao.setTipoOperadora(const Value: TTipoOperadora);
@@ -173,13 +147,13 @@ begin
   FOperadora.Free;
   case Value of
     extCielo:
-      FOperadora := TLeitorExtratoCartaoCielo.create(Self);
+      FOperadora := TLeitorExtratoCartaoCielo.Create(Self);
     extRede:
-      FOperadora := TLeitorExtratoCartaoRede.create(Self);
+      FOperadora := TLeitorExtratoCartaoRede.Create(Self);
     extSIPAG:
-      FOperadora := TLeitorExtratoCartaoSIPAG.create(Self);
+      FOperadora := TLeitorExtratoCartaoSIPAG.Create(Self);
   else
-    FOperadora := TOperadoraCartao.create(Self);
+    FOperadora := TOperadoraCartao.Create(Self);
   end;
   FTipoOperadora := Value;
 end;
@@ -203,7 +177,7 @@ begin
   Result := StrToDateDef(Trim(AText), 0, VStings);
 end;
 
-procedure TOperadoraCartao.CarregaItem(const Alinha: string; ALista: TStringList;
+procedure TOperadoraCartao.CarregaItem(const Alinha: string; ALista: TStrings;
   const QuoteChar: Char; Delimiter: Char);
 var
   P, P1: PChar;
@@ -222,12 +196,11 @@ begin
       begin
         P1 := P;
         while (P^ <> #0) and (P^ <> Delimiter) do
-        {$IFDEF MSWINDOWS}
+{$IFDEF MSWINDOWS}
           P := CharNext(P);
-        {$ELSE}
-        Inc(P);
-        {$ENDIF}
-
+{$ELSE}
+          Inc(P);
+{$ENDIF}
         SetString(S, P1, P - P1);
       end;
       ALista.Add(S);
@@ -236,31 +209,26 @@ begin
       begin
         P1 := P;
 
-        {$IFDEF MSWINDOWS}
+{$IFDEF MSWINDOWS}
         if CharNext(P1)^ = #0 then
-        {$ELSE}
-          Inc(P1);
+{$ELSE}
+        Inc(P1);
         if P1^ = #0 then
-        {$ENDIF}
+{$ENDIF}
           ALista.Add('');
 
         repeat
-          {$IFDEF MSWINDOWS}
+{$IFDEF MSWINDOWS}
           P := CharNext(P);
-          {$ELSE}
+{$ELSE}
           Inc(P);
-          {$ENDIF}
-        until not (CharInSet(P^, [#1..' ']));
+{$ENDIF}
+        until not(CharInSet(P^, [#1 .. ' ']));
       end;
     end;
   finally
     ALista.EndUpdate;
   end;
-end;
-
-procedure TOperadoraCartao.SetNome(const Value: string);
-begin
-  fNome := Value;
 end;
 
 function TOperadoraCartao.GetNome: string;
@@ -278,12 +246,7 @@ begin
   Result := fListadeParcelas[fListadeParcelas.Add(TParcela.Create)];
 end;
 
-procedure TOperadoraCartao.ErroAbstract(const AError: string);
-begin
-  raise Exception.CreateResFmt(@SFUNCAO_NAO_IMPLEMENTADA, [AError, fNome]);
-end;
-
-procedure TOperadoraCartao.LerArquivoOperadora(const ANomeArq: string);
+procedure TOperadoraCartao.LerExtrato(const ANomeArq: string);
 begin
   fListadeParcelas.Clear;
 
@@ -291,7 +254,8 @@ begin
     raise Exception.CreateRes(@SINFORMAR_NOME_ARQ_CONCILICAO);
 
   if not TFile.Exists(ANomeArq) then
-    raise Exception.CreateResFmt(@SNOME_ARQ_NAO_ENCONTRADO, [sLineBreak, ANomeArq]);
+    raise Exception.CreateResFmt(@SNOME_ARQ_NAO_ENCONTRADO,
+      [sLineBreak, ANomeArq]);
 
 end;
 
@@ -300,10 +264,9 @@ begin
   Result := fListadeParcelas;
 end;
 
-function TOperadoraCartao.ValidaArquivoOperadora(ARetorno: TStringList): Integer;
+function TOperadoraCartao.ValidaArquivo(AExtrato: TStrings): Integer;
 begin
   Result := 0;
-  ErroAbstract('ValidaArquivoOperadora');
 end;
 
 { TParcela }
@@ -326,4 +289,3 @@ begin
 end;
 
 end.
-
