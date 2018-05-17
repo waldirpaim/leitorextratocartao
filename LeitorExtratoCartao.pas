@@ -84,7 +84,7 @@ type
   public
     constructor Create;
     destructor Destroy; override;
-    procedure LerArquivoOperadora(const ANomeArq: string);
+    procedure LerArquivo(const ANomeArq: string);
     function Operadora: TOperadoraCartao;
     property About: string read GetAbout;
     property TipoOperadora: TTipoOperadora read FTipoOperadora
@@ -130,7 +130,7 @@ begin
   Result := 'LeitorExtratoCartao Ver: ' + CLeitorExtratoCartao_Versao;
 end;
 
-procedure TLeitorExtratoCartao.LerArquivoOperadora(const ANomeArq: string);
+procedure TLeitorExtratoCartao.LerArquivo(const ANomeArq: string);
 begin
   FOperadora.LerExtrato(ANomeArq);
 end;
