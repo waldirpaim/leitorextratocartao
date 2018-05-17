@@ -1,6 +1,6 @@
 ﻿# Leitor de extrato das operadoras de cartãoo de crédito e débito
 
-Leitor de extrato é um conjunto de classes escritas em Delphi Tokyo e tem por objetivo padronizar os diversos tipos de extratos fornecido pelas operadoras e assim facilitar a conciliação dos dados.
+Leitor de extrato é um conjunto de classes escritas em Delphi Tokyo e tem por objetivo padronizar os diversos tipos de extratos fornecidos pelas operadoras e assim facilitar a conciliação dos dados.
 
 Nesse momento são suportados:
 
