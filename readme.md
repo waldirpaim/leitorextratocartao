@@ -17,7 +17,7 @@ Nesse momento são suportados:
 
  1. >Layout1
 
-Novos Layouts pode serem adicionados facilmente.
+Novos layouts pode serem adicionados facilmente.
 
 Contato:
 waldirpaim@gmail.com
