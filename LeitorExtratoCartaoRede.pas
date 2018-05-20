@@ -52,7 +52,7 @@ begin
     VTmp.AddPair('numerocartao', '-1');
     VTmp.AddPair('numparcelas', '-1');
     ProcessaTemplate(ARetorno, VTmp);
-    Vdatavenda := StrToData(Copy(ARetorno[3], 17, 11));
+    Vdatavenda := ColunaData([Copy(ARetorno[3], 17, 11)], '0', '');
     for VParcela in FListaDeParcelas do
     begin
       VParcela.datavenda := Vdatavenda;
@@ -76,7 +76,7 @@ begin
       1:
         Layout1(VRetorno);
     else
-      raise Exception.CreateRes(@SLAYOUT_ARQUIVO_NAO_DEFINIDO);
+      raise Exception.CreateResFmt(@SLAYOUT_ARQUIVO_NAO_DEFINIDO, [ANomeArq]);
     end;
 
   finally

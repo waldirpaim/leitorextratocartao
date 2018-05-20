@@ -27,15 +27,15 @@ type
   private
     function GetNome: string;
     procedure IncluirParcela(const ALinha: string; ATemplate: TStrings);
-    function ObterString(ALinha: TArray<string>; const APosicao: string; Aquote: string): string;
   protected
     FOwner: TLeitorExtratoCartao;
     fNome: string;
     FShortDateFormat: string;
     FListaDeParcelas: TListaDeParcelas;
-    function StrToData(const AText: string): TDateTime; virtual;
-    function StringToFloat(const AText: string): Extended; virtual;
     procedure ProcessaTemplate(ARetorno: TStrings; ATemplate: TStrings); virtual;
+    function ColunaStr(ALinha: TArray<string>; const APosicao: string; Aquote: string): string;
+    function ColunaData(ALinha: TArray<string>; const APosicao: string; Aquote: string): TDateTime;
+    function ColunaFloat(ALinha: TArray<string>; const APosicao: string; Aquote: string): Extended;
   public
     constructor Create(AOwner: TLeitorExtratoCartao);
     destructor Destroy; override;
@@ -101,7 +101,7 @@ const
 
 resourcestring
   SFUNCAO_NAO_IMPLEMENTADA = 'Função %s não implementada %sPara a operadora %s';
-  SLAYOUT_ARQUIVO_NAO_DEFINIDO = 'Layout do arquivo não definido';
+  SLAYOUT_ARQUIVO_NAO_DEFINIDO = 'Layout do arquivo %s não foi definido';
   SINFORMAR_NOME_ARQ_CONCILICAO = 'Nome do arquivo de extrato do cartão deve ser informado';
   SNOME_ARQ_NAO_ENCONTRADO = 'Arquivo %s não encontrado: %s%s';
   SARQUIVO_FORA_FORMATO = 'Arquivo %s não está no formato esperado.';
@@ -171,23 +171,9 @@ begin
   FOwner := AOwner;
 end;
 
-function TOperadoraCartao.StrToData(const AText: string): TDateTime;
-var
-  VStings: TFormatSettings;
-begin
-  VStings := FormatSettings;
-  VStings.ShortDateFormat := FShortDateFormat;
-  Result := StrToDateDef(Trim(AText), 0, VStings);
-end;
-
 function TOperadoraCartao.GetNome: string;
 begin
   Result := fNome;
-end;
-
-function TOperadoraCartao.StringToFloat(const AText: string): Extended;
-begin
-  Result := StrToFloatDef(Trim(AText.Replace('R$ ', '')), 0);
 end;
 
 function TOperadoraCartao.CriarParcelaNaLista: TParcelaCartao;
@@ -205,13 +191,10 @@ end;
 procedure TOperadoraCartao.LerExtrato(const ANomeArq: string);
 begin
   FListaDeParcelas.Clear;
-
   if ANomeArq = '' then
     raise Exception.CreateRes(@SINFORMAR_NOME_ARQ_CONCILICAO);
-
   if not TFile.Exists(ANomeArq) then
     raise Exception.CreateResFmt(@SNOME_ARQ_NAO_ENCONTRADO, [sLineBreak, ANomeArq]);
-
 end;
 
 function TOperadoraCartao.Parcelas: TListaDeParcelas;
@@ -219,7 +202,7 @@ begin
   Result := FListaDeParcelas;
 end;
 
-function TOperadoraCartao.ObterString(ALinha: TArray<string>; const APosicao:
+function TOperadoraCartao.ColunaStr(ALinha: TArray<string>; const APosicao:
   string; Aquote: string): string;
 
   procedure AddStr(var S: string; AText: string);
@@ -246,34 +229,59 @@ begin
   end;
 end;
 
+function TOperadoraCartao.ColunaFloat(ALinha: TArray<string>; const APosicao:
+  string; Aquote: string): Extended;
+begin
+  Result := StrToFloatDef(Trim(ColunaStr(ALinha, APosicao, Aquote).Replace('R$ ', '')), 0);
+end;
+
+function TOperadoraCartao.ColunaData(ALinha: TArray<string>; const APosicao:
+  string; Aquote: string): TDateTime;
+var
+  VStings: TFormatSettings;
+begin
+  VStings := FormatSettings;
+  VStings.ShortDateFormat := FShortDateFormat;
+  Result := StrToDateDef(Trim(ColunaStr(ALinha, APosicao, Aquote)), 0, VStings);
+end;
+
 procedure TOperadoraCartao.IncluirParcela(const ALinha: string; ATemplate: TStrings);
+
+  function Posicao(ATemplate: TStrings; const AName: string; const ADef: string = ''): string;
+  var
+    VIndex: Integer;
+  begin
+    VIndex := ATemplate.IndexOfName(AName);
+    if VIndex = -1 then
+      Exit(ADef);
+    Result := ATemplate.ValueFromIndex[VIndex];
+  end;
+
 var
   VSeparador: TArray<string>;
   VLinha: TArray<string>;
   Vquote: char;
 begin
-  VSeparador := ATemplate.Values['separador'].Split(['|']);
-  Vquote := ATemplate.Values['quote'][1];
-  if Vquote = '' then
-    Vquote := '"';
+  VSeparador := Posicao(ATemplate, 'separador').Split(['|']);
+  Vquote := Posicao(ATemplate, 'quote', '"')[1];
   VLinha := ALinha.Split(VSeparador, Vquote);
   with CriarParcelaNaLista do
   begin
-    datavenda := StrToData(ObterString(VLinha, ATemplate.Values['datavenda'], Vquote));
-    dataprevista := StrToData(ObterString(VLinha, ATemplate.Values['dataprevista'], Vquote));
-    tipotransacao := ObterString(VLinha, ATemplate.Values['tipotransacao'], Vquote);
-    descricao := ObterString(VLinha, ATemplate.Values['descricao'], Vquote);
-    numerocartao := ObterString(VLinha, ATemplate.Values['numerocartao'], Vquote);
-    nsudoc := ObterString(VLinha, ATemplate.Values['nsudoc'], Vquote);
-    codautorizacao := ObterString(VLinha, ATemplate.Values['codautorizacao'], Vquote);
-    valorbruto := StringToFloat(ObterString(VLinha, ATemplate.Values['valorbruto'], Vquote));
-    valorliquido := StringToFloat(ObterString(VLinha, ATemplate.Values['valorliquido'], Vquote));
+    datavenda := ColunaData(VLinha, Posicao(ATemplate, 'datavenda'), Vquote);
+    dataprevista := ColunaData(VLinha, Posicao(ATemplate, 'dataprevista'), Vquote);
+    tipotransacao := ColunaStr(VLinha, Posicao(ATemplate, 'tipotransacao'), Vquote);
+    descricao := ColunaStr(VLinha, Posicao(ATemplate, 'descricao'), Vquote);
+    numerocartao := ColunaStr(VLinha, Posicao(ATemplate, 'numerocartao'), Vquote);
+    nsudoc := ColunaStr(VLinha, Posicao(ATemplate, 'nsudoc'), Vquote);
+    codautorizacao := ColunaStr(VLinha, Posicao(ATemplate, 'codautorizacao'), Vquote);
+    valorbruto := ColunaFloat(VLinha, Posicao(ATemplate, 'valorbruto'), Vquote);
+    valorliquido := ColunaFloat(VLinha, Posicao(ATemplate, 'valorliquido'), Vquote);
     if valorliquido = 0 then
       valorliquido := valorbruto;
-    valordesconto := StringToFloat(ObterString(VLinha, ATemplate.Values['valordesconto'], Vquote));
+    valordesconto := ColunaFloat(VLinha, Posicao(ATemplate, 'valordesconto'), Vquote);
     if valordesconto = 0 then
       valordesconto := valorbruto - valorliquido;
-    numparcelas := ObterString(VLinha, ATemplate.Values['numparcelas'], Vquote);
+    numparcelas := ColunaStr(VLinha, Posicao(ATemplate, 'numparcelas'), Vquote);
   end;
 end;
 
