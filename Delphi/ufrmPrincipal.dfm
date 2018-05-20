@@ -121,8 +121,19 @@ object FrmPrincipal: TFrmPrincipal
       TabOrder = 0
     end
   end
-  object cdsParcelas: TFDMemTable
+  object cdsParcelas: TClientDataSet
+    PersistDataPacket.Data = {
+      090100009619E0BD010000001800000009000000000003000000090109446174
+      6156656E646108000800000000000D5469706F5472616E736163616F01004900
+      00000100055749445448020002001E000944657363726963616F010049000000
+      01000557494454480200020032000C4E756D65726F43617274616F0100490000
+      000100055749445448020002001400064E7375446F6301004900000001000557
+      49445448020002000F000E436F644175746F72697A6163616F01004900000001
+      00055749445448020002000F000A56616C6F72427275746F0800040000000000
+      0D56616C6F72446573636F6E746F08000400000000000C56616C6F724C697175
+      69646F08000400000000000000}
     Active = True
+    Aggregates = <>
     FieldDefs = <
       item
         Name = 'DataVenda'
@@ -166,13 +177,7 @@ object FrmPrincipal: TFrmPrincipal
         DataType = ftFloat
       end>
     IndexDefs = <>
-    FetchOptions.AssignedValues = [evMode]
-    FetchOptions.Mode = fmAll
-    ResourceOptions.AssignedValues = [rvSilentMode]
-    ResourceOptions.SilentMode = True
-    UpdateOptions.AssignedValues = [uvCheckRequired, uvAutoCommitUpdates]
-    UpdateOptions.CheckRequired = False
-    UpdateOptions.AutoCommitUpdates = True
+    Params = <>
     StoreDefs = True
     Left = 224
     Top = 224

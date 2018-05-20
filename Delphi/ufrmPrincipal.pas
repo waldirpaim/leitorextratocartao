@@ -14,21 +14,13 @@ uses
   Vcl.DBGrids,
   LeitorExtratoCartao,
   Data.DB,
-  FireDAC.Comp.DataSet,
-  FireDAC.Comp.Client,
-  FireDAC.Stan.Intf,
-  FireDAC.Stan.Option,
-  FireDAC.Stan.Param,
-  FireDAC.Stan.Error,
-  FireDAC.DatS,
-  FireDAC.Phys.Intf,
-  FireDAC.DApt.Intf,
-  Vcl.Grids;
+  Vcl.Grids,
+  Datasnap.DBClient;
 
 type
   TFrmPrincipal = class(TForm)
     DBGrid1: TDBGrid;
-    cdsParcelas: TFDMemTable;
+    cdsParcelas: TClientDataSet;
     cdsParcelasDataVenda: TDateTimeField;
     cdsParcelasDescricao: TStringField;
     cdsParcelasNumeroCartao: TStringField;
@@ -59,14 +51,17 @@ implementation
 
 procedure TFrmPrincipal.btAbrirClick(Sender: TObject);
 var
-  VParcela: TParcela;
+  VParcela: TParcelaCartao;
   VLeitor: TLeitorExtratoCartao;
 begin
   if OpenDialog1.Execute then
   begin
     edArquivo.Text := OpenDialog1.FileName;
     if not cdsParcelas.Active then
+    begin
+      cdsParcelas.CreateDataSet;
       cdsParcelas.Active := True;
+    end;
     cdsParcelas.EmptyDataSet;
     VLeitor := TLeitorExtratoCartao.Create;
     cdsParcelas.DisableControls;
@@ -107,3 +102,4 @@ begin
 end;
 
 end.
+
