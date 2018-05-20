@@ -26,40 +26,40 @@ implementation
 constructor TLeitorExtratoCartaoRede.Create(AOwner: TLeitorExtratoCartao);
 begin
   inherited Create(AOwner);
-  fNome := 'Operadora Rede';
+  fNome := 'Rede';
 end;
 
 procedure TLeitorExtratoCartaoRede.Layout1(ARetorno: TStrings);
 var
-  Parcela: TParcela;
-  I: Integer;
-  Item: TStringList;
-  DataVenda: TDateTime;
+  VTmp: TStringList;
+  Vdatavenda: TDateTime;
+  VParcela: TParcelaCartao;
 begin
-  Item := TStringList.Create;
-  DataVenda := StrToData(Copy(ARetorno[3], 17, 11));
+  VTmp := TStringList.Create;
   try
-    for I := 7 to Pred(ARetorno.Count) do
+    VTmp.AddPair('separador', ',');
+    VTmp.AddPair('quote', '"');
+    VTmp.AddPair('linhainicial', '7');
+    VTmp.AddPair('nsudoc', '0');
+    VTmp.AddPair('codautorizacao', '0');
+    VTmp.AddPair('valorbruto', '1');
+    VTmp.AddPair('descricao', '6|3');
+    VTmp.AddPair('valorliquido', '1');
+    VTmp.AddPair('valordesconto', '-1');
+    VTmp.AddPair('datavenda', '-1');
+    VTmp.AddPair('dataprevista', '-1');
+    VTmp.AddPair('tipotransacao', '-1');
+    VTmp.AddPair('numerocartao', '-1');
+    VTmp.AddPair('numparcelas', '-1');
+    ProcessaTemplate(ARetorno, VTmp);
+    Vdatavenda := StrToData(Copy(ARetorno[3], 17, 11));
+    for VParcela in FListaDeParcelas do
     begin
-      CarregaItem(ARetorno.Strings[I], Item, '"', ',');
-      if StrToIntDef(Trim(Item.Strings[0]), 0) = 0 then
-        Continue;
-      Parcela := CriarParcelaNaLista;
-      Parcela.DataVenda := DataVenda;
-      Parcela.DataPrevista := DataVenda;
-      Parcela.NumeroCartao := '';
-      Parcela.TipoTransacao := '';
-      Parcela.NsuDoc := Item.Strings[0];
-      Parcela.ValorBruto := StringToFloat(Item.Strings[1]);
-      Parcela.Descricao := Trim(Item.Strings[6]);
-      if Parcela.Descricao = '' then
-        Parcela.Descricao := Trim(Item.Strings[3]);
-      Parcela.ValorLiquido := Parcela.ValorBruto;
-      Parcela.ValorDesconto := Parcela.ValorBruto - Parcela.ValorLiquido;
-      Parcela.CodAutorizacao := Parcela.NsuDoc;
+      VParcela.datavenda := Vdatavenda;
+      VParcela.dataprevista := Vdatavenda;
     end;
   finally
-    Item.Free;
+    VTmp.Free;
   end;
 end;
 
@@ -92,3 +92,4 @@ begin
 end;
 
 end.
+

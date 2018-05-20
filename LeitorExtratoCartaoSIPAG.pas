@@ -8,8 +8,6 @@ uses
   LeitorExtratoCartao;
 
 type
-  { TLeitorExtratoCartaoSIPAG }
-
   TLeitorExtratoCartaoSIPAG = class(TOperadoraCartao)
   private
     procedure Layout1(ARetorno: TStrings);
@@ -22,51 +20,39 @@ type
 
 implementation
 
-resourcestring
-  SARQUIVO_FORA_FORMATO = 'Arquivo %s não está no formato esperado.';
-
-  { TCBrOperadoraSIPAG }
-
 constructor TLeitorExtratoCartaoSIPAG.create(AOwner: TLeitorExtratoCartao);
 begin
   inherited create(AOwner);
   FShortDateFormat := 'dd/MM/yy';
-  fNome := 'Operadora SIPAG';
+  fNome := 'SIPAG';
 end;
 
 procedure TLeitorExtratoCartaoSIPAG.Layout1(ARetorno: TStrings);
 var
-  Parcela: TParcela;
-  I: Integer;
-  Item: TStringList;
+  VTmp: TStringList;
 begin
-  Item := TStringList.Create;
+  VTmp := TStringList.Create;
   try
-    for I := 1 to Pred(ARetorno.Count) do
-    begin
-      CarregaItem(ARetorno.Strings[I], Item, '"', ',');
-      if StrToData(Item.Strings[0]) = 0 then
-        Continue;
-      Parcela := CriarParcelaNaLista;
-      Parcela.DataVenda := StrToData(Item.Strings[0]);
-      Parcela.DataPrevista := 0;
-      Parcela.NsuDoc := Item.Strings[2];
-      Parcela.TipoTransacao := Item.Strings[3];
-      Parcela.Descricao := Concat(Parcela.TipoTransacao, ' ', Item.Strings[4]);
-      Parcela.NumParcelas := Item.Strings[5];
-      Parcela.CodAutorizacao := Item.Strings[6];
-      Parcela.NumeroCartao := Item.Strings[7];
-      Parcela.ValorBruto := StringToFloat(Item.Strings[14]);
-      Parcela.ValorDesconto := StringToFloat(Item.Strings[15]);
-      Parcela.ValorLiquido := StringToFloat(Item.Strings[16]);
-    end;
+    VTmp.AddPair('separador', ',');
+    VTmp.AddPair('linhainicial', '1');
+    VTmp.AddPair('datavenda', '0');
+    VTmp.AddPair('dataprevista', '0');
+    VTmp.AddPair('nsudoc', '2');
+    VTmp.AddPair('tipotransacao', '3');
+    VTmp.AddPair('descricao', '3|4');
+    VTmp.AddPair('numparcelas', '5');
+    VTmp.AddPair('numerocartao', '-1');
+    VTmp.AddPair('codautorizacao', '6');
+    VTmp.AddPair('valorbruto', '14');
+    VTmp.AddPair('valordesconto', '15');
+    VTmp.AddPair('valorliquido', '16');
+    ProcessaTemplate(ARetorno, VTmp);
   finally
-    Item.Free;
+    VTmp.Free;
   end;
 end;
 
-function TLeitorExtratoCartaoSIPAG.TestaEstruturaArquivo
-  (AList: TStrings): Boolean;
+function TLeitorExtratoCartaoSIPAG.TestaEstruturaArquivo(AList: TStrings): Boolean;
 var
   S: string;
 begin
@@ -82,8 +68,6 @@ var
 begin
   inherited LerExtrato(ANomeArq);
   VRetorno := TStringList.create;
-  VRetorno.Delimiter := ',';
-  VRetorno.DelimitedText := '"';
   try
     VRetorno.LoadFromFile(ANomeArq);
     if not TestaEstruturaArquivo(VRetorno) then
@@ -107,3 +91,4 @@ begin
 end;
 
 end.
+

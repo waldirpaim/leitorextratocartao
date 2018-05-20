@@ -11,7 +11,6 @@ type
   { TLeitorExtratoCartaoCielo }
 
   TLeitorExtratoCartaoCielo = class(TOperadoraCartao)
-  protected
   private
     procedure Layout1(ARetorno: TStrings);
     procedure Layout2(ARetorno: TStrings);
@@ -28,69 +27,58 @@ implementation
 constructor TLeitorExtratoCartaoCielo.Create(AOwner: TLeitorExtratoCartao);
 begin
   inherited Create(AOwner);
-  fNome := 'Operadora Cielo';
+  fNome := 'Cielo';
 end;
 
 procedure TLeitorExtratoCartaoCielo.Layout1(ARetorno: TStrings);
 var
-  Parcela: TParcela;
-  I: Integer;
-  Item: TStringList;
+  VTmp: TStringList;
 begin
-  Item := TStringList.Create;
+  VTmp := TStringList.Create;
   try
-    for I := 3 to ARetorno.Count - 1 do
-    begin
-      CarregaItem(ARetorno.Strings[I], Item);
-      if StrToData(Item.Strings[0]) = 0 then
-        Continue;
-      Parcela := CriarParcelaNaLista;
-      Parcela.DataVenda := StrToData(Item.Strings[0]);
-      Parcela.DataPrevista := StrToData(Item.Strings[1]);
-      Parcela.Descricao := Item.Strings[3];
-      Parcela.NumeroCartao := Item.Strings[4];
-      Parcela.NumParcelas := '';
-      Parcela.TipoTransacao := Item.Strings[2];
-      Parcela.NsuDoc := Item.Strings[6];
-      Parcela.CodAutorizacao := Item.Strings[7];
-      Parcela.ValorBruto := StringToFloat(Item.Strings[8]);
-      Parcela.ValorLiquido := Parcela.ValorBruto;
-      Parcela.ValorDesconto := Parcela.ValorBruto - Parcela.ValorLiquido;
-      Parcela.NsuDoc := Parcela.CodAutorizacao;
-    end;
+    VTmp.AddPair('separador', ';');
+    VTmp.AddPair('quote', '"');
+    VTmp.AddPair('linhainicial', '3');
+    VTmp.AddPair('datavenda', '0');
+    VTmp.AddPair('dataprevista', '1');
+    VTmp.AddPair('tipotransacao', '2');
+    VTmp.AddPair('descricao', '3|2');
+    VTmp.AddPair('numerocartao', '4');
+    VTmp.AddPair('nsudoc', '6');
+    VTmp.AddPair('codautorizacao', '7');
+    VTmp.AddPair('valorbruto', '8');
+    VTmp.AddPair('valorliquido', '8');
+    VTmp.AddPair('valordesconto', '-1');
+    VTmp.AddPair('numparcelas', '-1');
+    ProcessaTemplate(ARetorno, VTmp);
   finally
-    Item.Free;
+    VTmp.Free;
   end;
 end;
 
 procedure TLeitorExtratoCartaoCielo.Layout2(ARetorno: TStrings);
 var
-  Parcela: TParcela;
-  I: Integer;
-  Item: TStringList;
+  VTmp: TStringList;
 begin
-  Item := TStringList.Create;
+  VTmp := TStringList.Create;
   try
-    for I := 4 to Pred(ARetorno.Count) do
-    begin
-      CarregaItem(ARetorno.Strings[I], Item);
-      if StrToData(Item.Strings[1]) = 0 then
-        Continue;
-      Parcela := CriarParcelaNaLista;
-      Parcela.DataPrevista := StrToData(Item.Strings[1]);
-      Parcela.DataVenda := StrToData(Item.Strings[2]);
-      Parcela.NumeroCartao := Item.Strings[3];
-      Parcela.NumParcelas := '';
-      Parcela.TipoTransacao := Item.Strings[4];
-      Parcela.Descricao := Parcela.TipoTransacao;
-      Parcela.CodAutorizacao := Item.Strings[5];
-      Parcela.ValorBruto := StringToFloat(Item.Strings[6]);
-      Parcela.ValorLiquido := StringToFloat(Item.Strings[7]);
-      Parcela.ValorDesconto := Parcela.ValorBruto - Parcela.ValorLiquido;
-      Parcela.NsuDoc := Parcela.CodAutorizacao;
-    end;
+    VTmp.AddPair('separador', ';');
+    VTmp.AddPair('quote', '"');
+    VTmp.AddPair('linhainicial', '4');
+    VTmp.AddPair('dataprevista', '1');
+    VTmp.AddPair('datavenda', '2');
+    VTmp.AddPair('numerocartao', '3');
+    VTmp.AddPair('tipotransacao', '4');
+    VTmp.AddPair('descricao', '4');
+    VTmp.AddPair('codautorizacao', '5');
+    VTmp.AddPair('nsudoc', '5');
+    VTmp.AddPair('valorbruto', '6');
+    VTmp.AddPair('valorliquido', '7');
+    VTmp.AddPair('valordesconto', '-1');
+    VTmp.AddPair('numparcelas', '-1');
+    ProcessaTemplate(ARetorno, VTmp);
   finally
-    Item.Free;
+    VTmp.Free;
   end;
 end;
 
@@ -127,3 +115,4 @@ begin
 end;
 
 end.
+

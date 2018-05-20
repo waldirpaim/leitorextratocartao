@@ -17,63 +17,68 @@ const
 type
   TTipoOperadora = (extNenhum, extCielo, extRede, extSIPAG);
 
-  TParcela = class;
+  TParcelaCartao = class;
 
-  TListadeParcelas = class;
+  TListaDeParcelas = class;
 
   TLeitorExtratoCartao = class;
 
   TOperadoraCartao = class
   private
     function GetNome: string;
+    procedure IncluirParcela(const ALinha: string; ATemplate: TStrings);
+    function ObterString(ALinha: TArray<string>; const APosicao: string; Aquote: string): string;
   protected
     FOwner: TLeitorExtratoCartao;
     fNome: string;
     FShortDateFormat: string;
-    fListadeParcelas: TListadeParcelas;
-    procedure CarregaItem(const Alinha: string; ALista: TStrings;
-      const QuoteChar: Char = '"'; Delimiter: Char = ';'); virtual;
+    FListaDeParcelas: TListaDeParcelas;
     function StrToData(const AText: string): TDateTime; virtual;
     function StringToFloat(const AText: string): Extended; virtual;
+    procedure ProcessaTemplate(ARetorno: TStrings; ATemplate: TStrings); virtual;
   public
     constructor Create(AOwner: TLeitorExtratoCartao);
-    function CriarParcelaNaLista: TParcela; virtual;
-    function Parcelas: TListadeParcelas;
+    destructor Destroy; override;
+    function CriarParcelaNaLista: TParcelaCartao; virtual;
+    function Parcelas: TListaDeParcelas;
     procedure LerExtrato(const ANomeArq: string); virtual;
     function ValidaArquivo(AExtrato: TStrings): Integer; virtual;
     property Nome: string read GetNome;
   end;
 
-  TParcela = class
+  TParcelaCartao = class(TPersistent)
   private
-    fDataVenda: TDateTime;
-    fDataPrevista: TDateTime;
-    fDescricao: string;
-    fNumeroCartao: string;
-    fTID: string;
-    fNsuDoc: string;
-    fCodAutorizacao: string;
-    fValorBruto: Extended;
-    fValorLiquido: Extended;
-    FValorDesconto: Extended;
-    fNumParcelas: string;
-    fTipoTransacao: string;
+    fdatavenda: TDateTime;
+    fvalorbruto: Extended;
+    fnumerocartao: string;
+    fvalordesconto: Extended;
+    fcodautorizacao: string;
+    fdescricao: string;
+    fnumsequencia: Integer;
+    fnsudoc: string;
+    ftipotransacao: string;
+    fvalorliquido: Extended;
+    fdataprevista: TDateTime;
+    fnumparcelas: string;
   public
     constructor Create;
-    property DataVenda: TDateTime read fDataVenda write fDataVenda;
-    property DataPrevista: TDateTime read fDataPrevista write fDataPrevista;
-    property Descricao: string read fDescricao write fDescricao;
-    property TipoTransacao: string read fTipoTransacao write fTipoTransacao;
-    property NumeroCartao: string read fNumeroCartao write fNumeroCartao;
-    property NsuDoc: string read fNsuDoc write fNsuDoc;
-    property NumParcelas: string read fNumParcelas write fNumParcelas;
-    property CodAutorizacao: string read fCodAutorizacao write fCodAutorizacao;
-    property ValorBruto: Extended read fValorBruto write fValorBruto;
-    property ValorDesconto: Extended read FValorDesconto write FValorDesconto;
-    property ValorLiquido: Extended read fValorLiquido write fValorLiquido;
+    procedure Clear;
+  published
+    property numsequencia: Integer read fnumsequencia write fnumsequencia;
+    property datavenda: TDateTime read fdatavenda write fdatavenda;
+    property dataprevista: TDateTime read fdataprevista write fdataprevista;
+    property descricao: string read fdescricao write fdescricao;
+    property tipotransacao: string read ftipotransacao write ftipotransacao;
+    property numerocartao: string read fnumerocartao write fnumerocartao;
+    property nsudoc: string read fnsudoc write fnsudoc;
+    property numparcelas: string read fnumparcelas write fnumparcelas;
+    property codautorizacao: string read fcodautorizacao write fcodautorizacao;
+    property valorbruto: Extended read fvalorbruto write fvalorbruto;
+    property valordesconto: Extended read fvalordesconto write fvalordesconto;
+    property valorliquido: Extended read fvalorliquido write fvalorliquido;
   end;
 
-  TListadeParcelas = class(TObjectList<TParcela>);
+  TListaDeParcelas = class(TObjectList<TParcelaCartao>);
 
   TLeitorExtratoCartao = class
   private
@@ -87,21 +92,19 @@ type
     procedure LerArquivo(const ANomeArq: string);
     function Operadora: TOperadoraCartao;
     property About: string read GetAbout;
-    property TipoOperadora: TTipoOperadora read FTipoOperadora
-      write setTipoOperadora;
+    property TipoOperadora: TTipoOperadora read FTipoOperadora write setTipoOperadora;
   end;
 
 const
-  TipoConciliacaoStr: array [TTipoOperadora] of string = ('extNenhum',
-    'extCielo', 'extRede', 'extSIPAG');
+  TipoConciliacaoStr: array[TTipoOperadora] of string = ('extNenhum', 'extCielo',
+    'extRede', 'extSIPAG');
 
 resourcestring
-  SFUNCAO_NAO_IMPLEMENTADA =
-    'Função %s não implementada %s Para a operadora %s';
+  SFUNCAO_NAO_IMPLEMENTADA = 'Função %s não implementada %sPara a operadora %s';
   SLAYOUT_ARQUIVO_NAO_DEFINIDO = 'Layout do arquivo não definido';
-  SINFORMAR_NOME_ARQ_CONCILICAO =
-    'Nome do arquivo de extrato do cartão deve ser informado';
+  SINFORMAR_NOME_ARQ_CONCILICAO = 'Nome do arquivo de extrato do cartão deve ser informado';
   SNOME_ARQ_NAO_ENCONTRADO = 'Arquivo %s não encontrado: %s%s';
+  SARQUIVO_FORA_FORMATO = 'Arquivo %s não está no formato esperado.';
 
 implementation
 
@@ -163,7 +166,7 @@ end;
 constructor TOperadoraCartao.Create(AOwner: TLeitorExtratoCartao);
 begin
   inherited Create;
-  fListadeParcelas := TListadeParcelas.Create(True);
+  FListaDeParcelas := TListaDeParcelas.Create(True);
   FShortDateFormat := 'dd/MM/yyyy';
   FOwner := AOwner;
 end;
@@ -177,60 +180,6 @@ begin
   Result := StrToDateDef(Trim(AText), 0, VStings);
 end;
 
-procedure TOperadoraCartao.CarregaItem(const Alinha: string; ALista: TStrings;
-  const QuoteChar: Char; Delimiter: Char);
-var
-  P, P1: PChar;
-  S: string;
-begin
-  ALista.BeginUpdate;
-  try
-    ALista.Clear;
-    P := PChar(Alinha);
-
-    while P^ <> #0 do
-    begin
-      if P^ = QuoteChar then
-        S := AnsiExtractQuotedStr(P, QuoteChar)
-      else
-      begin
-        P1 := P;
-        while (P^ <> #0) and (P^ <> Delimiter) do
-{$IFDEF MSWINDOWS}
-          P := CharNext(P);
-{$ELSE}
-          Inc(P);
-{$ENDIF}
-        SetString(S, P1, P - P1);
-      end;
-      ALista.Add(S);
-
-      if P^ = Delimiter then
-      begin
-        P1 := P;
-
-{$IFDEF MSWINDOWS}
-        if CharNext(P1)^ = #0 then
-{$ELSE}
-        Inc(P1);
-        if P1^ = #0 then
-{$ENDIF}
-          ALista.Add('');
-
-        repeat
-{$IFDEF MSWINDOWS}
-          P := CharNext(P);
-{$ELSE}
-          Inc(P);
-{$ENDIF}
-        until not(CharInSet(P^, [#1 .. ' ']));
-      end;
-    end;
-  finally
-    ALista.EndUpdate;
-  end;
-end;
-
 function TOperadoraCartao.GetNome: string;
 begin
   Result := fNome;
@@ -241,27 +190,101 @@ begin
   Result := StrToFloatDef(Trim(AText.Replace('R$ ', '')), 0);
 end;
 
-function TOperadoraCartao.CriarParcelaNaLista: TParcela;
+function TOperadoraCartao.CriarParcelaNaLista: TParcelaCartao;
 begin
-  Result := fListadeParcelas[fListadeParcelas.Add(TParcela.Create)];
+  Result := FListaDeParcelas[FListaDeParcelas.Add(TParcelaCartao.Create)];
+  Result.numsequencia := FListaDeParcelas.Count;
+end;
+
+destructor TOperadoraCartao.Destroy;
+begin
+  FListaDeParcelas.Free;
+  inherited Destroy;
 end;
 
 procedure TOperadoraCartao.LerExtrato(const ANomeArq: string);
 begin
-  fListadeParcelas.Clear;
+  FListaDeParcelas.Clear;
 
   if ANomeArq = '' then
     raise Exception.CreateRes(@SINFORMAR_NOME_ARQ_CONCILICAO);
 
   if not TFile.Exists(ANomeArq) then
-    raise Exception.CreateResFmt(@SNOME_ARQ_NAO_ENCONTRADO,
-      [sLineBreak, ANomeArq]);
+    raise Exception.CreateResFmt(@SNOME_ARQ_NAO_ENCONTRADO, [sLineBreak, ANomeArq]);
 
 end;
 
-function TOperadoraCartao.Parcelas: TListadeParcelas;
+function TOperadoraCartao.Parcelas: TListaDeParcelas;
 begin
-  Result := fListadeParcelas;
+  Result := FListaDeParcelas;
+end;
+
+function TOperadoraCartao.ObterString(ALinha: TArray<string>; const APosicao:
+  string; Aquote: string): string;
+
+  procedure AddStr(var S: string; AText: string);
+  begin
+    if S = '' then
+      S := AText
+    else
+      S := S + ' ' + AText;
+  end;
+
+var
+  VPosicao: TArray<string>;
+  I: Integer;
+  VPos: Integer;
+begin
+  VPosicao := APosicao.Split(['|']);
+  Result := '';
+  for I := Low(VPosicao) to High(VPosicao) do
+  begin
+    VPos := StrToIntDef(VPosicao[I], -1);
+    if (VPos < 0) or (VPos > Length(ALinha)) then
+      Exit('');
+    AddStr(Result, ALinha[VPos].Replace(Aquote, ''));
+  end;
+end;
+
+procedure TOperadoraCartao.IncluirParcela(const ALinha: string; ATemplate: TStrings);
+var
+  VSeparador: TArray<string>;
+  VLinha: TArray<string>;
+  Vquote: char;
+begin
+  VSeparador := ATemplate.Values['separador'].Split(['|']);
+  Vquote := ATemplate.Values['quote'][1];
+  if Vquote = '' then
+    Vquote := '"';
+  VLinha := ALinha.Split(VSeparador, Vquote);
+  with CriarParcelaNaLista do
+  begin
+    datavenda := StrToData(ObterString(VLinha, ATemplate.Values['datavenda'], Vquote));
+    dataprevista := StrToData(ObterString(VLinha, ATemplate.Values['dataprevista'], Vquote));
+    tipotransacao := ObterString(VLinha, ATemplate.Values['tipotransacao'], Vquote);
+    descricao := ObterString(VLinha, ATemplate.Values['descricao'], Vquote);
+    numerocartao := ObterString(VLinha, ATemplate.Values['numerocartao'], Vquote);
+    nsudoc := ObterString(VLinha, ATemplate.Values['nsudoc'], Vquote);
+    codautorizacao := ObterString(VLinha, ATemplate.Values['codautorizacao'], Vquote);
+    valorbruto := StringToFloat(ObterString(VLinha, ATemplate.Values['valorbruto'], Vquote));
+    valorliquido := StringToFloat(ObterString(VLinha, ATemplate.Values['valorliquido'], Vquote));
+    if valorliquido = 0 then
+      valorliquido := valorbruto;
+    valordesconto := StringToFloat(ObterString(VLinha, ATemplate.Values['valordesconto'], Vquote));
+    if valordesconto = 0 then
+      valordesconto := valorbruto - valorliquido;
+    numparcelas := ObterString(VLinha, ATemplate.Values['numparcelas'], Vquote);
+  end;
+end;
+
+procedure TOperadoraCartao.ProcessaTemplate(ARetorno: TStrings; ATemplate: TStrings);
+var
+  VLinha: Integer;
+  I: Integer;
+begin
+  VLinha := StrToIntDef(ATemplate.Values['linhainicial'], 1);
+  for I := VLinha to Pred(ARetorno.Count) do
+    IncluirParcela(ARetorno[I], ATemplate);
 end;
 
 function TOperadoraCartao.ValidaArquivo(AExtrato: TStrings): Integer;
@@ -271,21 +294,27 @@ end;
 
 { TParcela }
 
-constructor TParcela.Create;
+procedure TParcelaCartao.Clear;
+begin
+  fdatavenda := 0;
+  fvalorbruto := 0;
+  fnumerocartao := '';
+  fvalordesconto := 0;
+  fcodautorizacao := '';
+  fdescricao := '';
+  fnumsequencia := 0;
+  fnsudoc := '';
+  ftipotransacao := '';
+  fvalorliquido := 0;
+  fdataprevista := 0;
+  fnumparcelas := '';
+end;
+
+constructor TParcelaCartao.Create;
 begin
   inherited Create;
-  fDataVenda := 0;
-  fDataPrevista := 0;
-  fDescricao := '';
-  fNumeroCartao := '';
-  fTID := '';
-  fNsuDoc := '';
-  fCodAutorizacao := '';
-  fValorBruto := 0;
-  fValorLiquido := 0;
-  FValorDesconto := 0;
-  fNumParcelas := '';
-  fTipoTransacao := '';
+  Clear;
 end;
 
 end.
+
