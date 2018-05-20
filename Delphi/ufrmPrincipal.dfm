@@ -4,7 +4,7 @@ object FrmPrincipal: TFrmPrincipal
   BorderIcons = [biSystemMenu, biMinimize]
   Caption = 'Leitor de arquivo de extrato do cart'#227'o...'
   ClientHeight = 365
-  ClientWidth = 876
+  ClientWidth = 944
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -17,10 +17,11 @@ object FrmPrincipal: TFrmPrincipal
   PixelsPerInch = 96
   TextHeight = 13
   object DBGrid1: TDBGrid
-    Left = 8
-    Top = 127
-    Width = 905
-    Height = 230
+    Left = 0
+    Top = 121
+    Width = 944
+    Height = 244
+    Align = alClient
     DataSource = dsParcelas
     Options = [dgTitles, dgIndicator, dgColumnResize, dgColLines, dgRowLines, dgTabs, dgConfirmDelete, dgCancelOnExit, dgTitleClick, dgTitleHotTrack]
     TabOrder = 1
@@ -33,13 +34,14 @@ object FrmPrincipal: TFrmPrincipal
   object GroupBox1: TGroupBox
     Left = 0
     Top = 0
-    Width = 876
+    Width = 944
     Height = 121
     Align = alTop
     Caption = ' Informe '
     TabOrder = 0
+    ExplicitWidth = 876
     DesignSize = (
-      876
+      944
       121)
     object Label1: TLabel
       Left = 8
@@ -62,13 +64,14 @@ object FrmPrincipal: TFrmPrincipal
     object edArquivo: TEdit
       Left = 8
       Top = 83
-      Width = 605
+      Width = 673
       Height = 21
       Anchors = [akLeft, akTop, akRight]
       TabOrder = 1
+      ExplicitWidth = 605
     end
     object btAbrir: TBitBtn
-      Left = 619
+      Left = 687
       Top = 81
       Width = 99
       Height = 26
@@ -111,6 +114,7 @@ object FrmPrincipal: TFrmPrincipal
         FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00}
       TabOrder = 2
       OnClick = btAbrirClick
+      ExplicitLeft = 619
     end
     object cbConciliacao: TComboBox
       Left = 8
@@ -123,57 +127,66 @@ object FrmPrincipal: TFrmPrincipal
   end
   object cdsParcelas: TClientDataSet
     PersistDataPacket.Data = {
-      090100009619E0BD010000001800000009000000000003000000090109446174
-      6156656E646108000800000000000D5469706F5472616E736163616F01004900
-      00000100055749445448020002001E000944657363726963616F010049000000
-      01000557494454480200020032000C4E756D65726F43617274616F0100490000
-      000100055749445448020002001400064E7375446F6301004900000001000557
-      49445448020002000F000E436F644175746F72697A6163616F01004900000001
-      00055749445448020002000F000A56616C6F72427275746F0800040000000000
-      0D56616C6F72446573636F6E746F08000400000000000C56616C6F724C697175
-      69646F08000400000000000000}
+      390100009619E0BD01000000180000000B00000000000300000039010C6E756D
+      73657175656E6369610400010000000000096461746176656E64610800080000
+      0000000D7469706F7472616E736163616F010049000000010005574944544802
+      0002001E000964657363726963616F0100490000000100055749445448020002
+      0032000C6E756D65726F63617274616F01004900000001000557494454480200
+      02001400066E7375646F630100490000000100055749445448020002000F000E
+      636F646175746F72697A6163616F010049000000010005574944544802000200
+      0F000A76616C6F72627275746F08000400000000000D76616C6F72646573636F
+      6E746F08000400000000000C76616C6F726C69717569646F0800040000000000
+      1270657263656E7475616C646573636F6E746F08000400000000000000}
     Active = True
     Aggregates = <>
     FieldDefs = <
       item
-        Name = 'DataVenda'
+        Name = 'numsequencia'
+        DataType = ftInteger
+      end
+      item
+        Name = 'datavenda'
         DataType = ftDateTime
       end
       item
-        Name = 'TipoTransacao'
+        Name = 'tipotransacao'
         DataType = ftString
         Size = 30
       end
       item
-        Name = 'Descricao'
+        Name = 'descricao'
         DataType = ftString
         Size = 50
       end
       item
-        Name = 'NumeroCartao'
+        Name = 'numerocartao'
         DataType = ftString
         Size = 20
       end
       item
-        Name = 'NsuDoc'
+        Name = 'nsudoc'
         DataType = ftString
         Size = 15
       end
       item
-        Name = 'CodAutorizacao'
+        Name = 'codautorizacao'
         DataType = ftString
         Size = 15
       end
       item
-        Name = 'ValorBruto'
+        Name = 'valorbruto'
         DataType = ftFloat
       end
       item
-        Name = 'ValorDesconto'
+        Name = 'valordesconto'
         DataType = ftFloat
       end
       item
-        Name = 'ValorLiquido'
+        Name = 'valorliquido'
+        DataType = ftFloat
+      end
+      item
+        Name = 'percentualdesconto'
         DataType = ftFloat
       end>
     IndexDefs = <>
@@ -181,46 +194,68 @@ object FrmPrincipal: TFrmPrincipal
     StoreDefs = True
     Left = 224
     Top = 224
+    object cdsParcelasnumsequencia: TIntegerField
+      DisplayLabel = ' #'
+      DisplayWidth = 5
+      FieldName = 'numsequencia'
+    end
     object cdsParcelasDataVenda: TDateTimeField
-      DisplayWidth = 13
-      FieldName = 'DataVenda'
+      DisplayLabel = 'Data Venda'
+      DisplayWidth = 11
+      FieldName = 'datavenda'
     end
     object cdsParcelasTipoTransacao: TStringField
-      DisplayWidth = 13
-      FieldName = 'TipoTransacao'
+      DisplayLabel = 'Transa'#231#227'o'
+      DisplayWidth = 14
+      FieldName = 'tipotransacao'
       Size = 30
     end
     object cdsParcelasDescricao: TStringField
-      DisplayWidth = 31
-      FieldName = 'Descricao'
+      DisplayLabel = 'Descri'#231#227'o'
+      DisplayWidth = 28
+      FieldName = 'descricao'
       Size = 50
     end
     object cdsParcelasNumeroCartao: TStringField
-      DisplayWidth = 17
-      FieldName = 'NumeroCartao'
+      DisplayLabel = 'N'#250'mero Cart'#227'o'
+      DisplayWidth = 14
+      FieldName = 'numerocartao'
     end
     object cdsParcelasNsuDoc: TStringField
+      DisplayLabel = 'NSU'
       DisplayWidth = 11
-      FieldName = 'NsuDoc'
+      FieldName = 'nsudoc'
       Size = 15
     end
     object cdsParcelasCodAutorizacao: TStringField
       DisplayLabel = 'Autoriza'#231#227'o'
       DisplayWidth = 12
-      FieldName = 'CodAutorizacao'
+      FieldName = 'codautorizacao'
       Size = 15
     end
     object cdsParcelasValorBruto: TFloatField
+      DisplayLabel = 'Valor Bruto'
       DisplayWidth = 11
-      FieldName = 'ValorBruto'
+      FieldName = 'valorbruto'
+      DisplayFormat = '#,##0.00'
     end
     object cdsParcelasValorDesconto: TFloatField
+      DisplayLabel = 'Desconto'
       DisplayWidth = 11
-      FieldName = 'ValorDesconto'
+      FieldName = 'valordesconto'
+      DisplayFormat = '#,##0.00'
     end
     object cdsParcelasValorLiquido: TFloatField
+      DisplayLabel = 'Valor Liquido'
       DisplayWidth = 12
-      FieldName = 'ValorLiquido'
+      FieldName = 'valorliquido'
+      DisplayFormat = '#,##0.00'
+    end
+    object cdsParcelaspercentualdesconto: TFloatField
+      DisplayLabel = 'Percentual'
+      DisplayWidth = 10
+      FieldName = 'percentualdesconto'
+      DisplayFormat = '#,##0.000'
     end
   end
   object dsParcelas: TDataSource

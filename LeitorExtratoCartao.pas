@@ -236,8 +236,13 @@ end;
 
 function TOperadoraCartao.ColunaFloat(ALinha: TArray<string>; const APosicao:
   string; Aquote: string): Extended;
+var
+  VColuna: string;
 begin
-  Result := StrToFloatDef(Trim(ColunaStr(ALinha, APosicao, Aquote).Replace('R$ ', '')), 0);
+  VColuna := ColunaStr(ALinha, APosicao, Aquote).Replace('R$', '');
+  if VColuna.contains(',') and VColuna.contains('.') then
+    VColuna := VColuna.Replace('.', '');
+  Result := StrToFloatDef(VColuna.Replace(' ', '', [rfReplaceAll]), 0);
 end;
 
 function TOperadoraCartao.ColunaData(ALinha: TArray<string>; const APosicao:
@@ -332,7 +337,7 @@ end;
 
 function TParcelaCartao.percentualdesconto: Extended;
 begin
-  if fvalordesconto = 0 then
+  if (fvalorbruto = 0) then
     Exit(0);
   Result := (fvalordesconto / fvalorbruto) * 100;
 end;

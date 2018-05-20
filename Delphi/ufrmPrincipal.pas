@@ -30,6 +30,8 @@ type
     cdsParcelasValorLiquido: TFloatField;
     cdsParcelasValorDesconto: TFloatField;
     cdsParcelasTipoTransacao: TStringField;
+    cdsParcelasnumsequencia: TIntegerField;
+    cdsParcelaspercentualdesconto: TFloatField;
     dsParcelas: TDataSource;
     GroupBox1: TGroupBox;
     Label1: TLabel;
@@ -71,6 +73,7 @@ begin
       for VParcela in VLeitor.Operadora.Parcelas do
       begin
         cdsParcelas.Append;
+        cdsParcelasnumsequencia.Value := VParcela.numsequencia;
         cdsParcelasDataVenda.Value := VParcela.DataVenda;
         cdsParcelasDescricao.AsString := VParcela.Descricao;
         cdsParcelasTipoTransacao.AsString := VParcela.TipoTransacao;
@@ -80,6 +83,7 @@ begin
         cdsParcelasValorBruto.AsFloat := VParcela.ValorBruto;
         cdsParcelasValorDesconto.AsFloat := VParcela.ValorDesconto;
         cdsParcelasValorLiquido.AsFloat := VParcela.ValorLiquido;
+        cdsParcelaspercentualdesconto.AsFloat := VParcela.percentualdesconto;
         cdsParcelas.Post;
       end;
       cdsParcelas.First;
