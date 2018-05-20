@@ -63,6 +63,7 @@ type
   public
     constructor Create;
     procedure Clear;
+    function percentualdesconto: Extended;
   published
     property numsequencia: Integer read fnumsequencia write fnumsequencia;
     property datavenda: TDateTime read fdatavenda write fdatavenda;
@@ -105,6 +106,8 @@ resourcestring
   SINFORMAR_NOME_ARQ_CONCILICAO = 'Nome do arquivo de extrato do cartão deve ser informado';
   SNOME_ARQ_NAO_ENCONTRADO = 'Arquivo %s não encontrado: %s%s';
   SARQUIVO_FORA_FORMATO = 'Arquivo %s não está no formato esperado.';
+  SOPERADORA_NAO_DEFINIDA = 'Você deve selecionar a operadora antes de ler o arquivo';
+  STEMPLATE_NAO_INFORMADO = 'Você deve informar o template do arquivo antes de processar o extrato';
 
 implementation
 
@@ -135,6 +138,8 @@ end;
 
 procedure TLeitorExtratoCartao.LerArquivo(const ANomeArq: string);
 begin
+  if not Assigned(FOperadora) then
+    raise Exception.CreateRes(@SOPERADORA_NAO_DEFINIDA);
   FOperadora.LerExtrato(ANomeArq);
 end;
 
@@ -245,43 +250,42 @@ begin
   Result := StrToDateDef(Trim(ColunaStr(ALinha, APosicao, Aquote)), 0, VStings);
 end;
 
+function Posicao(ATemplate: TStrings; const AName: string; const ADef: string = ''): string;
+var
+  VIndex: Integer;
+begin
+  VIndex := ATemplate.IndexOfName(AName);
+  if VIndex = -1 then
+    Exit(ADef);
+  Result := ATemplate.ValueFromIndex[VIndex];
+end;
+
 procedure TOperadoraCartao.IncluirParcela(const ALinha: string; ATemplate: TStrings);
-
-  function Posicao(ATemplate: TStrings; const AName: string; const ADef: string = ''): string;
-  var
-    VIndex: Integer;
-  begin
-    VIndex := ATemplate.IndexOfName(AName);
-    if VIndex = -1 then
-      Exit(ADef);
-    Result := ATemplate.ValueFromIndex[VIndex];
-  end;
-
 var
   VSeparador: TArray<string>;
   VLinha: TArray<string>;
-  Vquote: char;
+  VQuote: Char;
 begin
   VSeparador := Posicao(ATemplate, 'separador').Split(['|']);
-  Vquote := Posicao(ATemplate, 'quote', '"')[1];
-  VLinha := ALinha.Split(VSeparador, Vquote);
+  VQuote := Posicao(ATemplate, 'quote', '"')[1];
+  VLinha := ALinha.Split(VSeparador, VQuote);
   with CriarParcelaNaLista do
   begin
-    datavenda := ColunaData(VLinha, Posicao(ATemplate, 'datavenda'), Vquote);
-    dataprevista := ColunaData(VLinha, Posicao(ATemplate, 'dataprevista'), Vquote);
-    tipotransacao := ColunaStr(VLinha, Posicao(ATemplate, 'tipotransacao'), Vquote);
-    descricao := ColunaStr(VLinha, Posicao(ATemplate, 'descricao'), Vquote);
-    numerocartao := ColunaStr(VLinha, Posicao(ATemplate, 'numerocartao'), Vquote);
-    nsudoc := ColunaStr(VLinha, Posicao(ATemplate, 'nsudoc'), Vquote);
-    codautorizacao := ColunaStr(VLinha, Posicao(ATemplate, 'codautorizacao'), Vquote);
-    valorbruto := ColunaFloat(VLinha, Posicao(ATemplate, 'valorbruto'), Vquote);
-    valorliquido := ColunaFloat(VLinha, Posicao(ATemplate, 'valorliquido'), Vquote);
+    datavenda := ColunaData(VLinha, Posicao(ATemplate, 'datavenda'), VQuote);
+    dataprevista := ColunaData(VLinha, Posicao(ATemplate, 'dataprevista'), VQuote);
+    tipotransacao := ColunaStr(VLinha, Posicao(ATemplate, 'tipotransacao'), VQuote);
+    descricao := ColunaStr(VLinha, Posicao(ATemplate, 'descricao'), VQuote);
+    numerocartao := ColunaStr(VLinha, Posicao(ATemplate, 'numerocartao'), VQuote);
+    nsudoc := ColunaStr(VLinha, Posicao(ATemplate, 'nsudoc'), VQuote);
+    codautorizacao := ColunaStr(VLinha, Posicao(ATemplate, 'codautorizacao'), VQuote);
+    valorbruto := ColunaFloat(VLinha, Posicao(ATemplate, 'valorbruto'), VQuote);
+    valorliquido := ColunaFloat(VLinha, Posicao(ATemplate, 'valorliquido'), VQuote);
     if valorliquido = 0 then
       valorliquido := valorbruto;
-    valordesconto := ColunaFloat(VLinha, Posicao(ATemplate, 'valordesconto'), Vquote);
+    valordesconto := ColunaFloat(VLinha, Posicao(ATemplate, 'valordesconto'), VQuote);
     if valordesconto = 0 then
       valordesconto := valorbruto - valorliquido;
-    numparcelas := ColunaStr(VLinha, Posicao(ATemplate, 'numparcelas'), Vquote);
+    numparcelas := ColunaStr(VLinha, Posicao(ATemplate, 'numparcelas'), VQuote);
   end;
 end;
 
@@ -290,7 +294,9 @@ var
   VLinha: Integer;
   I: Integer;
 begin
-  VLinha := StrToIntDef(ATemplate.Values['linhainicial'], 1);
+  if not Assigned(ATemplate) then
+    raise Exception.CreateRes(@STEMPLATE_NAO_INFORMADO);
+  VLinha := StrToIntDef(Posicao(ATemplate, 'linhainicial'), 1);
   for I := VLinha to Pred(ARetorno.Count) do
     IncluirParcela(ARetorno[I], ATemplate);
 end;
@@ -322,6 +328,13 @@ constructor TParcelaCartao.Create;
 begin
   inherited Create;
   Clear;
+end;
+
+function TParcelaCartao.percentualdesconto: Extended;
+begin
+  if fvalordesconto = 0 then
+    Exit(0);
+  Result := (fvalordesconto / fvalorbruto) * 100;
 end;
 
 end.
