@@ -11,7 +11,6 @@ type
   TLeitorExtratoCartaoSIPAG = class(TOperadoraCartao)
   private
     procedure Layout1(ARetorno: TStrings);
-    function TestaEstruturaArquivo(AList: TStrings): Boolean;
   public
     constructor create(AOwner: TLeitorExtratoCartao);
     procedure LerExtrato(const ANomeArq: string); override;
@@ -52,16 +51,6 @@ begin
   end;
 end;
 
-function TLeitorExtratoCartaoSIPAG.TestaEstruturaArquivo(AList: TStrings): Boolean;
-var
-  S: string;
-begin
-  S := Copy(AList.Text, 1, 21);
-  if SameText(S, 'DATATRANSACAO,CLIENTE') then
-    Exit(True);
-  Result := False;
-end;
-
 procedure TLeitorExtratoCartaoSIPAG.LerExtrato(const ANomeArq: string);
 var
   VRetorno: TStringList;
@@ -70,8 +59,6 @@ begin
   VRetorno := TStringList.create;
   try
     VRetorno.LoadFromFile(ANomeArq);
-    if not TestaEstruturaArquivo(VRetorno) then
-      raise Exception.CreateResFmt(@SARQUIVO_FORA_FORMATO, [ANomeArq]);
 
     case ValidaArquivo(VRetorno) of
       1:
@@ -86,8 +73,13 @@ begin
 end;
 
 function TLeitorExtratoCartaoSIPAG.ValidaArquivo(ARetorno: TStrings): Integer;
+var
+  S: string;
 begin
-  Result := 1;
+  S := Copy(ARetorno.Text, 1, 21);
+  if SameText(S, 'DATATRANSACAO,CLIENTE') then
+    Exit(1);
+  Result := 0;
 end;
 
 end.
