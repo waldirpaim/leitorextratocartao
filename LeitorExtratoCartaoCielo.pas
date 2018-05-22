@@ -97,7 +97,7 @@ begin
       2:
         Layout2(VRetorno);
     else
-      raise Exception.CreateResFmt(@SLAYOUT_ARQUIVO_NAO_DEFINIDO, [ANomeArq]);
+      raise Exception.CreateResFmt(@SARQUIVO_FORA_FORMATO, [ANomeArq]);
     end;
 
   finally

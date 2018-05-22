@@ -102,7 +102,6 @@ const
 
 resourcestring
   SFUNCAO_NAO_IMPLEMENTADA = 'Função %s não implementada %sPara a operadora %s';
-  SLAYOUT_ARQUIVO_NAO_DEFINIDO = 'Layout do arquivo %s não foi definido';
   SINFORMAR_NOME_ARQ_CONCILICAO = 'Nome do arquivo de extrato do cartão deve ser informado';
   SNOME_ARQ_NAO_ENCONTRADO = 'Arquivo %s não encontrado: %s%s';
   SARQUIVO_FORA_FORMATO = 'Arquivo %s não está no formato esperado.';
