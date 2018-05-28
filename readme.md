@@ -12,6 +12,7 @@ Nesse momento são suportados:
 **Rede**
 
  1. >Layout1
+ 2. >Layout2
 
 **SiPag**
 
