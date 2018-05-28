@@ -83,7 +83,7 @@ begin
   try
     VTmp.AddPair('separador', ';');
     VTmp.AddPair('quote', '"');
-    VTmp.AddPair('linhainicial', '11');
+    VTmp.AddPair('linhainicial', '10');
     VTmp.AddPair('nsudoc', '1');
     VTmp.AddPair('codautorizacao', '-1');
     VTmp.AddPair('valorbruto', '6');
