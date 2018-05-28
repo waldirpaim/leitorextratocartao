@@ -66,15 +66,22 @@ begin
 end;
 
 procedure TLeitorExtratoCartaoRede.Layout2(ARetorno: TStrings);
+
+  function AplicarDif(AVal1: Extended; AVal2: Extended): Boolean;
+  begin
+    Result := SameValue(AVal1, Abs(AVal2), 0.0001) or (CompareValue(AVal1, Abs(AVal2),
+      0.0001) <> 0);
+  end;
+
 var
   VTmp: TStringList;
   VArray: TArray<string>;
   Vdescricao: string;
-  VTipo : string;
+  VTipo: string;
   VDesconto: Extended;
   VDifDesconto: Extended;
   VSomaDesconto: Extended;
-  VValDesc : Extended;
+  VValDesc: Extended;
   VPerDesconto: Extended;
   VValBruto: Extended;
   VParcela: TParcelaCartao;
@@ -109,7 +116,7 @@ begin
     if Length(VArray) >= 1 then
       VTipo := ColunaStr([VArray[1]], '0', '');
 
-    Vdescricao := Concat( Vdescricao, ' ', VTipo );
+    Vdescricao := Concat(Vdescricao, ' ', VTipo);
 
     VValBruto := 0;
 
@@ -134,18 +141,24 @@ begin
     begin
       VParcela.descricao := Vdescricao;
       VParcela.tipotransacao := VTipo;
-      VValDesc := RoundTo( VParcela.valorbruto * VPerDesconto / 100, -2);
+      VValDesc := RoundTo(VParcela.valorbruto * VPerDesconto / 100, -2);
       VParcela.valordesconto := VValDesc;
       VSomaDesconto := Sum([VSomaDesconto, VParcela.valordesconto]);
       VParcela.valorliquido := VParcela.valorbruto - VParcela.valordesconto;
-      if CompareValue(VSomaDesconto, VDesconto, 0.0001) > 0 then
-      begin
-        VDifDesconto := RoundTo(VSomaDesconto - VDesconto, 2);
-        if VDifDesconto > 0 then
-          VParcela.valordesconto := VParcela.valordesconto + VDifDesconto
-        else if VParcela.valordesconto > Abs(VDifDesconto) then
-          VParcela.valordesconto := VParcela.valordesconto - VDifDesconto;
-      end;
+    end;
+
+    if (CompareValue(VSomaDesconto, VDesconto, 0.0001) <> 0) then
+    begin
+      VDifDesconto := RoundTo(VSomaDesconto - VDesconto, -2);
+      for VParcela in FListaDeParcelas do
+        if AplicarDif(VParcela.valordesconto, VDifDesconto) then
+        begin
+          if VDifDesconto > 0 then
+            VParcela.valordesconto := VParcela.valordesconto - VDifDesconto
+          else
+            VParcela.valordesconto := VParcela.valordesconto + VDifDesconto;
+          Exit;
+        end;
     end;
 
   finally
