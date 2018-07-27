@@ -15,6 +15,12 @@ type
   private
     procedure Layout1(ARetorno: TStrings);
     procedure Layout2(ARetorno: TStrings);
+    procedure Layout3(ARetorno: TStrings);
+    procedure CalcRateio(AValBruto, AValDesc: Extended; const ADescricao, ATipo: string);
+    function ObterValBruto(ARetorno: TStrings): Extended;
+    function ObterValDesc(ARetorno: TStrings): Extended;
+    function ObterValor(ARetorno: TStrings; ALinha: Integer): Extended;
+    function ObterStr(ARetorno: TStrings; ALinha: Integer): string;
   public
     constructor Create(AOwner: TLeitorExtratoCartao);
     procedure LerExtrato(const ANomeArq: string); override;
@@ -68,16 +74,8 @@ end;
 procedure TLeitorExtratoCartaoRede.Layout2(ARetorno: TStrings);
 var
   VTmp: TStringList;
-  VArray: TArray<string>;
   Vdescricao: string;
-  VTipo : string;
-  VDesconto: Extended;
-  VDifDesconto: Extended;
-  VSomaDesconto: Extended;
-  VValDesc : Extended;
-  VPerDesconto: Extended;
-  VValBruto: Extended;
-  VParcela: TParcelaCartao;
+  VTipo: string;
 begin
   VTmp := TStringList.Create;
   try
@@ -97,60 +95,128 @@ begin
     VTmp.AddPair('numparcelas', '-1');
     ProcessaTemplate(ARetorno, VTmp);
 
-    Vdescricao := '';
+    VTipo := ObterStr(ARetorno, 3);
 
-    VArray := ARetorno[2].Split([';']);
-    if Length(VArray) >= 1 then
-      Vdescricao := ColunaStr([VArray[1]], '0', '');
+    Vdescricao := Concat(ObterStr(ARetorno, 2), ' ', VTipo);
 
-    VTipo := '';
-
-    VArray := ARetorno[3].Split([';']);
-    if Length(VArray) >= 1 then
-      VTipo := ColunaStr([VArray[1]], '0', '');
-
-    Vdescricao := Concat( Vdescricao, ' ', VTipo );
-
-    VValBruto := 0;
-
-    VArray := ARetorno[5].Split([';']);
-    if Length(VArray) >= 1 then
-      VValBruto := ColunaFloat([VArray[1]], '0', '');
-
-    VDesconto := 0;
-
-    VArray := ARetorno[6].Split([';']);
-    if Length(VArray) >= 1 then
-      VDesconto := ColunaFloat([VArray[1]], '0', '');
-
-    VPerDesconto := 0;
-
-    if VDesconto > 0 then
-      VPerDesconto := (VDesconto / VValBruto * 100);
-
-    VSomaDesconto := 0;
-
-    for VParcela in FListaDeParcelas do
-    begin
-      VParcela.descricao := Vdescricao;
-      VParcela.tipotransacao := VTipo;
-      VValDesc := RoundTo( VParcela.valorbruto * VPerDesconto / 100, -2);
-      VParcela.valordesconto := VValDesc;
-      VSomaDesconto := Sum([VSomaDesconto, VParcela.valordesconto]);
-      VParcela.valorliquido := VParcela.valorbruto - VParcela.valordesconto;
-      if CompareValue(VSomaDesconto, VDesconto, 0.0001) > 0 then
-      begin
-        VDifDesconto := RoundTo(VSomaDesconto - VDesconto, 2);
-        if VDifDesconto > 0 then
-          VParcela.valordesconto := VParcela.valordesconto + VDifDesconto
-        else if VParcela.valordesconto > Abs(VDifDesconto) then
-          VParcela.valordesconto := VParcela.valordesconto - VDifDesconto;
-      end;
-    end;
+    CalcRateio(ObterValBruto(ARetorno), ObterValDesc(ARetorno), Vdescricao, VTipo);
 
   finally
     VTmp.Free;
   end;
+end;
+
+procedure TLeitorExtratoCartaoRede.Layout3(ARetorno: TStrings);
+var
+  VTmp: TStringList;
+  Vdescricao: string;
+  VTipo: string;
+begin
+  VTmp := TStringList.Create;
+  try
+    VTmp.AddPair('separador', ';');
+    VTmp.AddPair('quote', '"');
+    VTmp.AddPair('linhainicial', '14');
+    VTmp.AddPair('dataprevista', '-1');
+    VTmp.AddPair('datavenda', '5');
+    VTmp.AddPair('numerocartao', '2');
+    VTmp.AddPair('tipotransacao', '-1');
+    VTmp.AddPair('descricao', '-1');
+    VTmp.AddPair('codautorizacao', '1');
+    VTmp.AddPair('nsudoc', '1');
+    VTmp.AddPair('valorbruto', '7');
+    VTmp.AddPair('valorliquido', '-1');
+    VTmp.AddPair('valordesconto', '-1');
+    VTmp.AddPair('numparcelas', '8');
+    ProcessaTemplate(ARetorno, VTmp);
+
+    VTipo := 'Crédito';
+
+    Vdescricao := Concat(ObterStr(ARetorno, 3), ' ', VTipo);
+
+    CalcRateio(ObterValBruto(ARetorno), ObterValDesc(ARetorno), Vdescricao, VTipo);
+
+  finally
+    VTmp.Free;
+  end;
+end;
+
+procedure TLeitorExtratoCartaoRede.CalcRateio(AValBruto: Extended; AValDesc:
+  Extended; const ADescricao: string; const ATipo: string);
+
+  function AplicarDif(AVal1: Extended; AVal2: Extended): Boolean;
+  begin
+    Result := SameValue(AVal1, Abs(AVal2), 0.0001) or (CompareValue(AVal1, Abs(AVal2),
+      0.0001) <> 0);
+  end;
+
+var
+  VDifDesconto: Extended;
+  VSomaDesconto: Extended;
+  VValDesc: Extended;
+  VPerDesconto: Extended;
+  VParcela: TParcelaCartao;
+begin
+  VPerDesconto := 0;
+
+  if AValDesc > 0 then
+    VPerDesconto := (AValDesc / AValBruto * 100);
+
+  VSomaDesconto := 0;
+
+  for VParcela in FListaDeParcelas do
+  begin
+    VParcela.descricao := ADescricao;
+    VParcela.tipotransacao := ATipo;
+    VValDesc := RoundTo(VParcela.valorbruto * VPerDesconto / 100, -2);
+    VParcela.valordesconto := VValDesc;
+    VSomaDesconto := Sum([VSomaDesconto, VParcela.valordesconto]);
+    VParcela.valorliquido := VParcela.valorbruto - VParcela.valordesconto;
+  end;
+
+  if (CompareValue(VSomaDesconto, AValDesc, 0.0001) <> 0) then
+  begin
+    VDifDesconto := RoundTo(VSomaDesconto - AValDesc, -2);
+    for VParcela in FListaDeParcelas do
+      if AplicarDif(VParcela.valordesconto, VDifDesconto) then
+      begin
+        if VDifDesconto > 0 then
+          VParcela.valordesconto := VParcela.valordesconto - VDifDesconto
+        else
+          VParcela.valordesconto := VParcela.valordesconto + VDifDesconto;
+        Exit;
+      end;
+  end;
+end;
+
+function TLeitorExtratoCartaoRede.ObterValor(ARetorno: TStrings; ALinha: Integer): Extended;
+var
+  VArray: TArray<string>;
+begin
+  VArray := ARetorno[ALinha].Split([';']);
+  if Length(VArray) >= 1 then
+    Exit(ColunaFloat([VArray[1]], '0', ''));
+  Result := 0;
+end;
+
+function TLeitorExtratoCartaoRede.ObterStr(ARetorno: TStrings; ALinha: Integer): string;
+var
+  VArray: TArray<string>;
+begin
+  VArray := ARetorno[ALinha].Split([';']);
+  if Length(VArray) >= 1 then
+    Exit(ColunaStr([VArray[1]], '0', ''));
+  Result := '';
+end;
+
+function TLeitorExtratoCartaoRede.ObterValBruto(ARetorno: TStrings): Extended;
+begin
+  Result := ObterValor(ARetorno, 5);
+end;
+
+function TLeitorExtratoCartaoRede.ObterValDesc(ARetorno: TStrings): Extended;
+begin
+  Result := ObterValor(ARetorno, 6);
 end;
 
 procedure TLeitorExtratoCartaoRede.LerExtrato(const ANomeArq: string);
@@ -167,6 +233,8 @@ begin
         Layout1(VRetorno);
       2:
         Layout2(VRetorno);
+      3:
+        Layout3(VRetorno);
     else
       raise Exception.CreateResFmt(@SARQUIVO_FORA_FORMATO, [ANomeArq]);
     end;
@@ -185,6 +253,9 @@ begin
     Exit(1);
   if SameText(VText, 'data da venda;') and SameText(Copy(ARetorno[1], 1, 14), 'resumo vendas;') then
     Exit(2);
+  if SameText(VText, 'data da venda;') and SameText(Copy(ARetorno[1], 1, 22),
+    'data do processamento;') then
+    Exit(3);
   Result := 0;
 end;
 
