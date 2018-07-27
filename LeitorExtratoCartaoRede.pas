@@ -176,14 +176,11 @@ begin
 
   if (CompareValue(VSomaDesconto, AValDesc, 0.0001) <> 0) then
   begin
-    VDifDesconto := RoundTo(VSomaDesconto - AValDesc, -2);
+    VDifDesconto := RoundTo(AValDesc - VSomaDesconto, -2);
     for VParcela in FListaDeParcelas do
       if AplicarDif(VParcela.valordesconto, VDifDesconto) then
       begin
-        if VDifDesconto > 0 then
-          VParcela.valordesconto := VParcela.valordesconto - VDifDesconto
-        else
-          VParcela.valordesconto := VParcela.valordesconto + VDifDesconto;
+        VParcela.valordesconto := VParcela.valordesconto + VDifDesconto;
         Exit;
       end;
   end;
