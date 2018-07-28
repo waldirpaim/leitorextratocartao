@@ -15,7 +15,7 @@ const
   CLeitorExtratoCartao_Versao = '0.0.1';
 
 type
-  TTipoOperadora = (extNenhum, extCielo, extRede, extSIPAG);
+  TTipoOperadora = (extNenhum, extCielo, extRede, extSIPAG, extSODEXO);
 
   TParcelaCartao = class;
 
@@ -26,7 +26,7 @@ type
   TOperadoraCartao = class
   private
     function GetNome: string;
-    procedure IncluirParcela(const ALinha: string; ATemplate: TStrings);
+    function IncluirParcela(const ALinha: string; ATemplate: TStrings): Boolean;
   protected
     FOwner: TLeitorExtratoCartao;
     fNome: string;
@@ -98,7 +98,7 @@ type
 
 const
   TipoConciliacaoStr: array[TTipoOperadora] of string = ('extNenhum', 'extCielo',
-    'extRede', 'extSIPAG');
+    'extRede', 'extSIPAG', 'extSODEXO');
 
 resourcestring
   SFUNCAO_NAO_IMPLEMENTADA = 'Função %s não implementada %sPara a operadora %s';
@@ -113,6 +113,7 @@ implementation
 uses
   LeitorExtratoCartaoCielo,
   LeitorExtratoCartaoRede,
+  LeitorExtratoCartaoSODEXO,
   LeitorExtratoCartaoSIPAG;
 
 { TLeitorExtratoCartao }
@@ -159,6 +160,8 @@ begin
       FOperadora := TLeitorExtratoCartaoRede.Create(Self);
     extSIPAG:
       FOperadora := TLeitorExtratoCartaoSIPAG.Create(Self);
+    extSODEXO:
+      FOperadora := TLeitorExtratoCartaoSODEXO.Create(Self);
   else
     FOperadora := TOperadoraCartao.Create(Self);
   end;
@@ -264,17 +267,22 @@ begin
   Result := ATemplate.ValueFromIndex[VIndex];
 end;
 
-procedure TOperadoraCartao.IncluirParcela(const ALinha: string; ATemplate: TStrings);
+function TOperadoraCartao.IncluirParcela(const ALinha: string; ATemplate: TStrings): Boolean;
 var
   VSeparador: TArray<string>;
   VLinha: TArray<string>;
   VQuote: Char;
+  VParcela: TParcelaCartao;
 begin
   VSeparador := Posicao(ATemplate, 'separador').Split(['|']);
   VQuote := Posicao(ATemplate, 'quote', '"')[1];
   VLinha := ALinha.Split(VSeparador, VQuote);
-  with CriarParcelaNaLista do
+
+  VParcela := CriarParcelaNaLista;
+
+  with VParcela do
   begin
+    Result := True;
     datavenda := ColunaData(VLinha, Posicao(ATemplate, 'datavenda'), VQuote);
     dataprevista := ColunaData(VLinha, Posicao(ATemplate, 'dataprevista'), VQuote);
     tipotransacao := ColunaStr(VLinha, Posicao(ATemplate, 'tipotransacao'), VQuote);
@@ -291,18 +299,29 @@ begin
       valordesconto := valorbruto - valorliquido;
     numparcelas := ColunaStr(VLinha, Posicao(ATemplate, 'numparcelas'), VQuote);
   end;
+  if SameText(fNome, 'SODEXO') and (VParcela.codautorizacao = '') and (VParcela.nsudoc
+    = '') and (VParcela.datavenda = 0) then
+  begin
+    Result := False;
+    FListaDeParcelas.Remove(VParcela);
+  end;
 end;
 
 procedure TOperadoraCartao.ProcessaTemplate(ARetorno: TStrings; ATemplate: TStrings);
 var
-  VLinha: Integer;
+  VLinhaIni: Integer;
+  VLinhaFim: Integer;
   I: Integer;
 begin
   if not Assigned(ATemplate) then
     raise Exception.CreateRes(@STEMPLATE_NAO_INFORMADO);
-  VLinha := StrToIntDef(Posicao(ATemplate, 'linhainicial'), 1);
-  for I := VLinha to Pred(ARetorno.Count) do
-    IncluirParcela(ARetorno[I], ATemplate);
+  VLinhaIni := StrToIntDef(Posicao(ATemplate, 'linhainicial'), 1);
+  VLinhaFim := StrToIntDef(Posicao(ATemplate, 'qtdregistros'), -1);
+  if VLinhaFim = -1 then
+    VLinhaFim := Pred(ARetorno.Count);
+  for I := VLinhaIni to VLinhaFim do
+    if not IncluirParcela(ARetorno[I], ATemplate) then
+      Exit;
 end;
 
 function TOperadoraCartao.ValidaArquivo(AExtrato: TStrings): Integer;
