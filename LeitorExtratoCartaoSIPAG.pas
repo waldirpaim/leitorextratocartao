@@ -73,11 +73,8 @@ begin
 end;
 
 function TLeitorExtratoCartaoSIPAG.ValidaArquivo(ARetorno: TStrings): Integer;
-var
-  S: string;
 begin
-  S := Copy(ARetorno.Text, 1, 21);
-  if SameText(S, 'DATATRANSACAO,CLIENTE') then
+  if SameText(Copy(ARetorno.Text, 1, 21), 'DATATRANSACAO,CLIENTE') then
     Exit(1);
   Result := 0;
 end;
