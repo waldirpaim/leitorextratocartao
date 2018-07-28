@@ -51,7 +51,7 @@ begin
     VTmp.AddPair('datavenda', '2');
     VTmp.AddPair('numerocartao', '2');
     VTmp.AddPair('tipotransacao', '-1');
-    VTmp.AddPair('descricao', '5;4');
+    VTmp.AddPair('descricao', '5|4');
     VTmp.AddPair('codautorizacao', '7');
     VTmp.AddPair('nsudoc', '7');
     VTmp.AddPair('valorbruto', '8');
