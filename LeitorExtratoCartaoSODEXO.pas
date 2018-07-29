@@ -21,8 +21,9 @@ type
     function ObterValLiquido(ARetorno: TStrings): Extended;
   public
     constructor Create(AOwner: TLeitorExtratoCartao);
-    procedure LerExtrato(const ANomeArq: string); override;
-    function ValidaArquivo(ARetorno: TStrings): Integer; override;
+    procedure LerExtrato(const ANomeArq: string); overload; override;
+    procedure LerExtrato(AExtrato: TStrings); overload; override;
+    class function ValidaArquivo(ARetorno: TStrings): Integer; override;
   end;
 
 implementation
@@ -70,6 +71,16 @@ begin
   finally
     VTmp.Free;
   end;
+end;
+
+procedure TLeitorExtratoCartaoSODEXO.LerExtrato(AExtrato: TStrings);
+begin
+  case ValidaArquivo(AExtrato) of
+      1:
+        Layout1(AExtrato);
+    else
+      raise Exception.CreateResFmt(@SARQUIVO_FORA_FORMATO, ['']);
+    end;
 end;
 
 procedure TLeitorExtratoCartaoSODEXO.CalcRateio(AValBruto: Extended; AValDesc:
@@ -176,7 +187,7 @@ begin
   end;
 end;
 
-function TLeitorExtratoCartaoSODEXO.ValidaArquivo(ARetorno: TStrings): Integer;
+class function TLeitorExtratoCartaoSODEXO.ValidaArquivo(ARetorno: TStrings): Integer;
 begin
   if SameText(Copy(ARetorno[0], 1, 14), 'Nome Fantasia:') and SameText(Copy(ARetorno
     [1], 1, 13), 'Razão Social:') then

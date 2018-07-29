@@ -41,8 +41,9 @@ type
     destructor Destroy; override;
     function CriarParcelaNaLista: TParcelaCartao; virtual;
     function Parcelas: TListaDeParcelas;
-    procedure LerExtrato(const ANomeArq: string); virtual;
-    function ValidaArquivo(AExtrato: TStrings): Integer; virtual;
+    procedure LerExtrato(const ANomeArq: string); overload; virtual;
+    procedure LerExtrato(AExtrato: TStrings); overload; virtual;
+    class function ValidaArquivo(AExtrato: TStrings): Integer; virtual;
     property Nome: string read GetNome;
   end;
 
@@ -63,6 +64,7 @@ type
   public
     constructor Create;
     procedure Clear;
+    function Clone: TParcelaCartao;
     function percentualdesconto: Extended;
   published
     property numsequencia: Integer read fnumsequencia write fnumsequencia;
@@ -204,6 +206,13 @@ begin
     raise Exception.CreateResFmt(@SNOME_ARQ_NAO_ENCONTRADO, [sLineBreak, ANomeArq]);
 end;
 
+procedure TOperadoraCartao.LerExtrato(AExtrato: TStrings);
+begin
+  FListaDeParcelas.Clear;
+  if not Assigned(AExtrato) then
+    raise Exception.CreateRes(@SINFORMAR_NOME_ARQ_CONCILICAO);
+end;
+
 function TOperadoraCartao.Parcelas: TListaDeParcelas;
 begin
   Result := FListaDeParcelas;
@@ -324,7 +333,7 @@ begin
       Exit;
 end;
 
-function TOperadoraCartao.ValidaArquivo(AExtrato: TStrings): Integer;
+class function TOperadoraCartao.ValidaArquivo(AExtrato: TStrings): Integer;
 begin
   Result := 0;
 end;
@@ -345,6 +354,23 @@ begin
   fvalorliquido := 0;
   fdataprevista := 0;
   fnumparcelas := '';
+end;
+
+function TParcelaCartao.Clone: TParcelaCartao;
+begin
+  Result := TParcelaCartao.Create;
+  Result.datavenda := datavenda;
+  Result.valorbruto := valorbruto;
+  Result.numerocartao := numerocartao;
+  Result.valordesconto := valordesconto;
+  Result.codautorizacao := codautorizacao;
+  Result.descricao := descricao;
+  Result.numsequencia := numsequencia;
+  Result.nsudoc := nsudoc;
+  Result.tipotransacao := tipotransacao;
+  Result.valorliquido := valorliquido;
+  Result.dataprevista := dataprevista;
+  Result.numparcelas := numparcelas;
 end;
 
 constructor TParcelaCartao.Create;

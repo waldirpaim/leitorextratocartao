@@ -16,6 +16,7 @@ type
     procedure Layout1(ARetorno: TStrings);
     procedure Layout2(ARetorno: TStrings);
     procedure Layout3(ARetorno: TStrings);
+    procedure Layout4(ARetorno: TStrings);
     procedure CalcRateio(AValBruto, AValDesc: Extended; const ADescricao, ATipo: string);
     function ObterValBruto(ARetorno: TStrings): Extended;
     function ObterValDesc(ARetorno: TStrings): Extended;
@@ -24,10 +25,13 @@ type
   public
     constructor Create(AOwner: TLeitorExtratoCartao);
     procedure LerExtrato(const ANomeArq: string); override;
-    function ValidaArquivo(ARetorno: TStrings): Integer; override;
+    class function ValidaArquivo(ARetorno: TStrings): Integer; override;
   end;
 
 implementation
+
+uses
+  LeitorExtratoCartaoSODEXO;
 
 { TLeitorExtratoCartaoRede }
 
@@ -141,6 +145,21 @@ begin
   end;
 end;
 
+procedure TLeitorExtratoCartaoRede.Layout4(ARetorno: TStrings);
+var
+  VObj: TLeitorExtratoCartaoSODEXO;
+  VParc: TParcelaCartao;
+begin
+  VObj := TLeitorExtratoCartaoSODEXO.Create(FOwner);
+  try
+    VObj.LerExtrato(ARetorno);
+    for VParc in VObj.Parcelas do
+      Parcelas.Add(VParc.Clone);
+  finally
+    VObj.Free;
+  end;
+end;
+
 procedure TLeitorExtratoCartaoRede.CalcRateio(AValBruto: Extended; AValDesc:
   Extended; const ADescricao: string; const ATipo: string);
 
@@ -232,6 +251,8 @@ begin
         Layout2(VRetorno);
       3:
         Layout3(VRetorno);
+      4:
+        Layout4(VRetorno);
     else
       raise Exception.CreateResFmt(@SARQUIVO_FORA_FORMATO, [ANomeArq]);
     end;
@@ -241,7 +262,7 @@ begin
   end;
 end;
 
-function TLeitorExtratoCartaoRede.ValidaArquivo(ARetorno: TStrings): Integer;
+class function TLeitorExtratoCartaoRede.ValidaArquivo(ARetorno: TStrings): Integer;
 var
   VText: string;
 begin
@@ -253,6 +274,8 @@ begin
   if SameText(VText, 'data da venda;') and SameText(Copy(ARetorno[1], 1, 22),
     'data do processamento;') then
     Exit(3);
+  if TLeitorExtratoCartaoSODEXO.ValidaArquivo(ARetorno) = 1 then
+    Exit(4);
   Result := 0;
 end;
 
