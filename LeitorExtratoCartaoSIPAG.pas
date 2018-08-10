@@ -58,6 +58,7 @@ var
   I: Integer;
   VText: string;
   VResumo: string;
+  VPos: Integer;
 begin
   for I := ARetorno.Count - 1 downto 0 do
   begin
@@ -72,6 +73,9 @@ begin
     VText := ARetorno[I].Trim;
     if VText.contains('Resumo de Vendas:') then
     begin
+      VPos := Pos('"Data de Crédito:', VText);
+      if VPos > 0 then
+        VText := Copy(VText, VPos + 18, 8);
       VResumo := VText;
       ARetorno[I] := '';
     end
@@ -96,12 +100,12 @@ begin
     VTmp.AddPair('separador', ',');
     VTmp.AddPair('linhainicial', '3');
     VTmp.AddPair('datavenda', '0');
-    VTmp.AddPair('dataprevista', '0');
+    VTmp.AddPair('dataprevista', '18');
     VTmp.AddPair('nsudoc', '2');
     VTmp.AddPair('tipotransacao', '3');
     VTmp.AddPair('descricao', '3|4');
     VTmp.AddPair('numparcelas', '5');
-    VTmp.AddPair('numerocartao', '-1');
+    VTmp.AddPair('numerocartao', '7');
     VTmp.AddPair('codautorizacao', '6');
     VTmp.AddPair('valorbruto', '14');
     VTmp.AddPair('valordesconto', '15');
@@ -147,7 +151,7 @@ begin
   if AExt.Count >= 3 then
     VText := AExt[3];
   if SameText(Copy(VText, 1, 21), '"Histórico de Vendas"') then
-   Exit(2);
+    Exit(2);
   Result := 0;
 end;
 
