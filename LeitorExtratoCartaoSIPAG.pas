@@ -14,7 +14,7 @@ type
   public
     constructor create(AOwner: TLeitorExtratoCartao);
     procedure LerExtrato(const ANomeArq: string); override;
-    function ValidaArquivo(ARetorno: TStrings): Integer; override;
+    class function ValidaArquivo(AExt: TStrings): Integer; override;
   end;
 
 implementation
@@ -72,12 +72,9 @@ begin
   end;
 end;
 
-function TLeitorExtratoCartaoSIPAG.ValidaArquivo(ARetorno: TStrings): Integer;
-var
-  S: string;
+class function TLeitorExtratoCartaoSIPAG.ValidaArquivo(AExt: TStrings): Integer;
 begin
-  S := Copy(ARetorno.Text, 1, 21);
-  if SameText(S, 'DATATRANSACAO,CLIENTE') then
+  if SameText(Copy(AExt.Text, 1, 21), 'DATATRANSACAO,CLIENTE') then
     Exit(1);
   Result := 0;
 end;

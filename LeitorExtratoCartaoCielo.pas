@@ -14,13 +14,17 @@ type
   private
     procedure Layout1(ARetorno: TStrings);
     procedure Layout2(ARetorno: TStrings);
+    procedure Layout3(ARetorno: TStrings);
   public
     constructor Create(AOwner: TLeitorExtratoCartao);
     procedure LerExtrato(const ANomeArq: string); override;
-    function ValidaArquivo(ARetorno: TStrings): Integer; override;
+    class function ValidaArquivo(AExt: TStrings): Integer; override;
   end;
 
 implementation
+
+uses
+  LeitorExtratoCartaoSODEXO;
 
 { TLeitorExtratoCartaoCielo }
 
@@ -82,6 +86,21 @@ begin
   end;
 end;
 
+procedure TLeitorExtratoCartaoCielo.Layout3(ARetorno: TStrings);
+var
+  VObj: TLeitorExtratoCartaoSODEXO;
+  VParc : TParcelaCartao;
+begin
+  VObj := TLeitorExtratoCartaoSODEXO.Create(FOwner);
+  try
+   VObj.LerExtrato(ARetorno);
+   for VParc in VObj.Parcelas do
+   Parcelas.Add(VParc.Clone);
+  finally
+    VObj.Free;
+  end;
+end;
+
 procedure TLeitorExtratoCartaoCielo.LerExtrato(const ANomeArq: string);
 var
   VRetorno: TStringList;
@@ -96,6 +115,8 @@ begin
         Layout1(VRetorno);
       2:
         Layout2(VRetorno);
+      3:
+        Layout3(VRetorno);
     else
       raise Exception.CreateResFmt(@SARQUIVO_FORA_FORMATO, [ANomeArq]);
     end;
@@ -105,12 +126,14 @@ begin
   end;
 end;
 
-function TLeitorExtratoCartaoCielo.ValidaArquivo(ARetorno: TStrings): Integer;
+class function TLeitorExtratoCartaoCielo.ValidaArquivo(AExt: TStrings): Integer;
 begin
-  if (SameText(Copy(Trim(ARetorno[0].Replace('"', '')), 1, 8), 'Período:')) then
+  if (SameText(Copy(Trim(AExt[0].Replace('"', '')), 1, 8), 'Período:')) then
     Exit(1);
-  if SameText(Copy(ARetorno[0], 1, 25), 'Central de Relacionamento') then
+  if SameText(Copy(AExt[0], 1, 25), 'Central de Relacionamento') then
     Exit(2);
+  if TLeitorExtratoCartaoSODEXO.ValidaArquivo(AExt) = 1 then
+    Exit(3);
   Result := 0;
 end;
 
