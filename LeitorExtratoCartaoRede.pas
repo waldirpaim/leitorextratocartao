@@ -22,6 +22,7 @@ type
     function ObterValDesc(ARetorno: TStrings): Extended;
     function ObterValor(ARetorno: TStrings; ALinha: Integer): Extended;
     function ObterStr(ARetorno: TStrings; ALinha: Integer): string;
+    procedure Layout5(ARetorno: TStrings);
   public
     constructor Create(AOwner: TLeitorExtratoCartao);
     procedure LerExtrato(const ANomeArq: string); override;
@@ -31,7 +32,8 @@ type
 implementation
 
 uses
-  LeitorExtratoCartaoSODEXO;
+  LeitorExtratoCartaoSODEXO,
+  LeitorExtratoCartaoGoodCard;
 
 { TLeitorExtratoCartaoRede }
 
@@ -160,6 +162,21 @@ begin
   end;
 end;
 
+procedure TLeitorExtratoCartaoRede.Layout5(ARetorno: TStrings);
+var
+  VObj: TLeitorExtratoCartaoGoodCard;
+  VParc: TParcelaCartao;
+begin
+  VObj := TLeitorExtratoCartaoGoodCard.Create(FOwner);
+  try
+    VObj.LerExtrato(ARetorno);
+    for VParc in VObj.Parcelas do
+      Parcelas.Add(VParc.Clone);
+  finally
+    VObj.Free;
+  end;
+end;
+
 procedure TLeitorExtratoCartaoRede.CalcRateio(AValBruto: Extended; AValDesc:
   Extended; const ADescricao: string; const ATipo: string);
 
@@ -253,6 +270,8 @@ begin
         Layout3(VRetorno);
       4:
         Layout4(VRetorno);
+      5:
+        Layout5(VRetorno);
     else
       raise Exception.CreateResFmt(@SARQUIVO_FORA_FORMATO, [ANomeArq]);
     end;
@@ -276,6 +295,8 @@ begin
     Exit(3);
   if TLeitorExtratoCartaoSODEXO.ValidaArquivo(AExt) = 1 then
     Exit(4);
+  if TLeitorExtratoCartaoGoodCard.ValidaArquivo(AExt) = 1 then
+    Exit(5);
   Result := 0;
 end;
 
