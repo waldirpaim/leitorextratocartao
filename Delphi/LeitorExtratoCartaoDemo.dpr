@@ -7,6 +7,7 @@ uses
   LeitorExtratoCartaoCielo in '..\LeitorExtratoCartaoCielo.pas',
   LeitorExtratoCartaoRede in '..\LeitorExtratoCartaoRede.pas',
   LeitorExtratoCartaoSODEXO in '..\LeitorExtratoCartaoSODEXO.pas',
+  LeitorExtratoCartaoGoodCard in '..\LeitorExtratoCartaoGoodCard.pas',
   LeitorExtratoCartaoSIPAG in '..\LeitorExtratoCartaoSIPAG.pas';
 
 {$R *.res}

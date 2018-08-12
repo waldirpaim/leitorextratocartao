@@ -108,6 +108,8 @@
         <DCCReference Include="..\LeitorExtratoCartao.pas"/>
         <DCCReference Include="..\LeitorExtratoCartaoCielo.pas"/>
         <DCCReference Include="..\LeitorExtratoCartaoRede.pas"/>
+        <DCCReference Include="..\LeitorExtratoCartaoSODEXO.pas"/>
+        <DCCReference Include="..\LeitorExtratoCartaoGoodCard.pas"/>
         <DCCReference Include="..\LeitorExtratoCartaoSIPAG.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>

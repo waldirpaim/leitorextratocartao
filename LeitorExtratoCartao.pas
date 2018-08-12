@@ -15,7 +15,7 @@ const
   CLeitorExtratoCartao_Versao = '0.0.1';
 
 type
-  TTipoOperadora = (extNenhum, extCielo, extRede, extSIPAG, extSODEXO);
+  TTipoOperadora = (extNenhum, extCielo, extRede, extSIPAG, extSODEXO, extGoodCard);
 
   TParcelaCartao = class;
 
@@ -36,14 +36,16 @@ type
     function ColunaStr(ALinha: TArray<string>; const APosicao: string; Aquote: string): string;
     function ColunaData(ALinha: TArray<string>; const APosicao: string; Aquote: string): TDateTime;
     function ColunaFloat(ALinha: TArray<string>; const APosicao: string; Aquote: string): Extended;
+  protected
+    procedure TratarLayout(ARetorno: TStrings); virtual;
+    procedure LerExtrato(const ANomeArq: string); overload; virtual;
+    procedure LerExtrato(AExtrato: TStrings); overload; virtual;
+    class function ValidaArquivo(AExt: TStrings): Integer; virtual;
   public
     constructor Create(AOwner: TLeitorExtratoCartao);
     destructor Destroy; override;
     function CriarParcelaNaLista: TParcelaCartao; virtual;
     function Parcelas: TListaDeParcelas;
-    procedure LerExtrato(const ANomeArq: string); overload; virtual;
-    procedure LerExtrato(AExtrato: TStrings); overload; virtual;
-    class function ValidaArquivo(AExt: TStrings): Integer; virtual;
     property Nome: string read GetNome;
   end;
 
@@ -100,7 +102,7 @@ type
 
 const
   TipoConciliacaoStr: array[TTipoOperadora] of string = ('extNenhum', 'extCielo',
-    'extRede', 'extSIPAG', 'extSODEXO');
+    'extRede', 'extSIPAG', 'extSODEXO', 'extGoodCard');
 
 resourcestring
   SFUNCAO_NAO_IMPLEMENTADA = 'Função %s não implementada %sPara a operadora %s';
@@ -116,7 +118,8 @@ uses
   LeitorExtratoCartaoCielo,
   LeitorExtratoCartaoRede,
   LeitorExtratoCartaoSODEXO,
-  LeitorExtratoCartaoSIPAG;
+  LeitorExtratoCartaoSIPAG,
+  LeitorExtratoCartaoGoodCard;
 
 { TLeitorExtratoCartao }
 
@@ -164,6 +167,8 @@ begin
       FOperadora := TLeitorExtratoCartaoSIPAG.Create(Self);
     extSODEXO:
       FOperadora := TLeitorExtratoCartaoSODEXO.Create(Self);
+    extGoodCard:
+      FOperadora := TLeitorExtratoCartaoGoodCard.Create(Self);
   else
     FOperadora := TOperadoraCartao.Create(Self);
   end;
@@ -263,7 +268,7 @@ var
 begin
   VStings := FormatSettings;
   VStings.ShortDateFormat := FShortDateFormat;
-  Result := StrToDateDef(Trim(ColunaStr(ALinha, APosicao, Aquote)), 0, VStings);
+  Result := Int(StrToDateTimeDef(Trim(ColunaStr(ALinha, APosicao, Aquote)), 0, VStings) );
 end;
 
 function Posicao(ATemplate: TStrings; const AName: string; const ADef: string = ''): string;
@@ -308,12 +313,6 @@ begin
       valordesconto := valorbruto - valorliquido;
     numparcelas := ColunaStr(VLinha, Posicao(ATemplate, 'numparcelas'), VQuote);
   end;
-  if SameText(fNome, 'SODEXO') and (VParcela.codautorizacao = '') and (VParcela.nsudoc
-    = '') and (VParcela.datavenda = 0) then
-  begin
-    Result := False;
-    FListaDeParcelas.Remove(VParcela);
-  end;
 end;
 
 procedure TOperadoraCartao.ProcessaTemplate(ARetorno: TStrings; ATemplate: TStrings);
@@ -331,6 +330,11 @@ begin
   for I := VLinhaIni to VLinhaFim do
     if not IncluirParcela(ARetorno[I], ATemplate) then
       Exit;
+end;
+
+procedure TOperadoraCartao.TratarLayout(ARetorno: TStrings);
+begin
+
 end;
 
 class function TOperadoraCartao.ValidaArquivo(AExt: TStrings): Integer;
