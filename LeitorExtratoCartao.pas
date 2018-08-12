@@ -268,7 +268,7 @@ var
 begin
   VStings := FormatSettings;
   VStings.ShortDateFormat := FShortDateFormat;
-  Result := Int(StrToDateTimeDef(Trim(ColunaStr(ALinha, APosicao, Aquote)), 0, VStings) );
+  Result := Int(StrToDateTimeDef(Trim(ColunaStr(ALinha, APosicao, Aquote)), 0, VStings));
 end;
 
 function Posicao(ATemplate: TStrings; const AName: string; const ADef: string = ''): string;
