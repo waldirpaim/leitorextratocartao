@@ -14,15 +14,17 @@ type
   TLeitorExtratoCartaoSODEXO = class(TOperadoraCartao)
   private
     procedure Layout1(ARetorno: TStrings);
-    procedure CalcRateio(AValBruto, AValDesc: Extended; const ATipo: string);
+    procedure CalcRateio(AValBruto, AValDesc: Extended; const ATipo: string; AData: TDateTime);
     function ObterValBruto(ARetorno: TStrings): Extended;
     function ObterValor(ARetorno: TStrings; ALinha: Integer; ACol: Integer): Extended;
     function ObterStr(ARetorno: TStrings; ALinha: Integer; const ASep: string = ';'): string;
     function ObterValLiquido(ARetorno: TStrings): Extended;
+    function ObterDataPgto(ARetorno: TStrings): TDateTime;
   public
     constructor Create(AOwner: TLeitorExtratoCartao);
     procedure LerExtrato(const ANomeArq: string); overload; override;
     procedure LerExtrato(AExtrato: TStrings); overload; override;
+    procedure TratarLayout(ARetorno: TStrings); override;
     class function ValidaArquivo(AExt: TStrings): Integer; override;
   end;
 
@@ -42,12 +44,13 @@ var
   VTipo: string;
   VValBruto: Extended;
   VValLiquido: Extended;
+  VDtPgto: TDateTime;
 begin
   VTmp := TStringList.Create;
   try
     VTmp.AddPair('separador', ';');
     VTmp.AddPair('quote', '"');
-    VTmp.AddPair('linhainicial', '14');
+    VTmp.AddPair('linhainicial', '8');
     VTmp.AddPair('dataprevista', '-1');
     VTmp.AddPair('datavenda', '2');
     VTmp.AddPair('numerocartao', '2');
@@ -59,14 +62,15 @@ begin
     VTmp.AddPair('valorliquido', '-1');
     VTmp.AddPair('valordesconto', '-1');
     VTmp.AddPair('numparcelas', '-1');
+    TratarLayout(ARetorno);
     ProcessaTemplate(ARetorno, VTmp);
 
     VTipo := ObterStr(ARetorno, 4);
 
     VValBruto := ObterValBruto(ARetorno);
     VValLiquido := ObterValLiquido(ARetorno);
-
-    CalcRateio(VValBruto, VValBruto - VValLiquido, VTipo);
+    VDtPgto := ObterDataPgto(ARetorno);
+    CalcRateio(VValBruto, VValBruto - VValLiquido, VTipo, VDtPgto);
 
   finally
     VTmp.Free;
@@ -76,15 +80,15 @@ end;
 procedure TLeitorExtratoCartaoSODEXO.LerExtrato(AExtrato: TStrings);
 begin
   case ValidaArquivo(AExtrato) of
-      1:
-        Layout1(AExtrato);
-    else
-      raise Exception.CreateResFmt(@SARQUIVO_FORA_FORMATO, ['']);
-    end;
+    1:
+      Layout1(AExtrato);
+  else
+    raise Exception.CreateResFmt(@SARQUIVO_FORA_FORMATO, ['']);
+  end;
 end;
 
 procedure TLeitorExtratoCartaoSODEXO.CalcRateio(AValBruto: Extended; AValDesc:
-  Extended; const ATipo: string);
+  Extended; const ATipo: string; AData: TDateTime);
 
   function AplicarDif(AVal1: Extended; AVal2: Extended): Boolean;
   begin
@@ -109,6 +113,7 @@ begin
   for VParcela in FListaDeParcelas do
   begin
     VParcela.tipotransacao := ATipo;
+    VParcela.dataprevista := AData;
     VValDesc := RoundTo(VParcela.valorbruto * VPerDesconto / 100, -2);
     VParcela.valordesconto := VValDesc;
     VSomaDesconto := Sum([VSomaDesconto, VParcela.valordesconto]);
@@ -138,6 +143,48 @@ begin
   Result := 0;
 end;
 
+procedure TLeitorExtratoCartaoSODEXO.TratarLayout(ARetorno: TStrings);
+var
+  I: Integer;
+  VText: string;
+  VLiq: string;
+  VBrt: string;
+  VProd: string;
+begin
+  VLiq := '';
+  VBrt := '';
+  VProd := '';
+  for I := ARetorno.Count - 1 downto 0 do
+  begin
+    VText := ARetorno[I].Trim;
+    if (VText = '') or (VText.contains('VALOR DEDUZIDO')) or (VText.contains('REEMBOLSO')) then
+      ARetorno.Delete(I)
+    else
+    begin
+      if VText.contains('TOTAL LÍQUIDO') then
+      begin
+        VLiq := VText;
+        ARetorno.Delete(I);
+      end
+      else if VText.contains('TOTAL BRUTO') then
+      begin
+        VBrt := VText;
+        ARetorno.Delete(I);
+      end
+      else if VText.contains('Produto:') then
+      begin
+        VProd := VText;
+        ARetorno.Delete(I);
+      end
+      else if VText.contains(';;;;;;;;;') then
+        ARetorno.Delete(I);
+    end;
+  end;
+  ARetorno.Insert(2, VBrt);
+  ARetorno.Insert(3, VLiq);
+  ARetorno.Insert(4, VProd);
+end;
+
 function TLeitorExtratoCartaoSODEXO.ObterStr(ARetorno: TStrings; ALinha: Integer;
   const ASep: string): string;
 var
@@ -157,12 +204,17 @@ end;
 
 function TLeitorExtratoCartaoSODEXO.ObterValBruto(ARetorno: TStrings): Extended;
 begin
-  Result := ObterValor(ARetorno, 6, 8);
+  Result := ObterValor(ARetorno, 2, 8);
+end;
+
+function TLeitorExtratoCartaoSODEXO.ObterDataPgto(ARetorno: TStrings): TDateTime;
+begin
+  Result := StrToDateDef(ObterStr(ARetorno, 2), 0);
 end;
 
 function TLeitorExtratoCartaoSODEXO.ObterValLiquido(ARetorno: TStrings): Extended;
 begin
-  Result := ObterValor(ARetorno, 10, 8);
+  Result := ObterValor(ARetorno, 3, 8);
 end;
 
 procedure TLeitorExtratoCartaoSODEXO.LerExtrato(const ANomeArq: string);
@@ -189,8 +241,8 @@ end;
 
 class function TLeitorExtratoCartaoSODEXO.ValidaArquivo(AExt: TStrings): Integer;
 begin
-  if SameText(Copy(AExt[0], 1, 14), 'Nome Fantasia:') and SameText(Copy(AExt
-    [1], 1, 13), 'Razão Social:') then
+  if SameText(Copy(AExt[0], 1, 14), 'Nome Fantasia:') and SameText(Copy(AExt[1],
+    1, 13), 'Razão Social:') then
     Exit(1);
   Result := 0;
 end;
