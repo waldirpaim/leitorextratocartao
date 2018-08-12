@@ -12,10 +12,10 @@ type
   private
     procedure Layout1(ARetorno: TStrings);
     procedure Layout2(ARetorno: TStrings);
-    procedure TratarLayout(ARetorno: TStrings; AId: Integer);
   public
     constructor create(AOwner: TLeitorExtratoCartao);
     procedure LerExtrato(const ANomeArq: string); override;
+    procedure TratarLayout(ARetorno: TStrings); override;
     class function ValidaArquivo(AExt: TStrings): Integer; override;
   end;
 
@@ -53,7 +53,7 @@ begin
   end;
 end;
 
-procedure TLeitorExtratoCartaoSIPAG.TratarLayout(ARetorno: TStrings; AId: Integer);
+procedure TLeitorExtratoCartaoSIPAG.TratarLayout(ARetorno: TStrings);
 var
   I: Integer;
   VText: string;
@@ -110,7 +110,7 @@ begin
     VTmp.AddPair('valorbruto', '14');
     VTmp.AddPair('valordesconto', '15');
     VTmp.AddPair('valorliquido', '16');
-    TratarLayout(ARetorno, 2);
+    TratarLayout(ARetorno);
     ProcessaTemplate(ARetorno, VTmp);
   finally
     VTmp.Free;
