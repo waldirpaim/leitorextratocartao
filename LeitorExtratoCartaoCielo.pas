@@ -15,6 +15,7 @@ type
     procedure Layout1(ARetorno: TStrings);
     procedure Layout2(ARetorno: TStrings);
     procedure Layout3(ARetorno: TStrings);
+    procedure Layout4(ARetorno: TStrings);
   public
     constructor Create(AOwner: TLeitorExtratoCartao);
     procedure LerExtrato(const ANomeArq: string); override;
@@ -24,7 +25,8 @@ type
 implementation
 
 uses
-  LeitorExtratoCartaoSODEXO;
+  LeitorExtratoCartaoSODEXO,
+  LeitorExtratoCartaoGoodCard;
 
 { TLeitorExtratoCartaoCielo }
 
@@ -89,13 +91,28 @@ end;
 procedure TLeitorExtratoCartaoCielo.Layout3(ARetorno: TStrings);
 var
   VObj: TLeitorExtratoCartaoSODEXO;
-  VParc : TParcelaCartao;
+  VParc: TParcelaCartao;
 begin
   VObj := TLeitorExtratoCartaoSODEXO.Create(FOwner);
   try
-   VObj.LerExtrato(ARetorno);
-   for VParc in VObj.Parcelas do
-   Parcelas.Add(VParc.Clone);
+    VObj.LerExtrato(ARetorno);
+    for VParc in VObj.Parcelas do
+      Parcelas.Add(VParc.Clone);
+  finally
+    VObj.Free;
+  end;
+end;
+
+procedure TLeitorExtratoCartaoCielo.Layout4(ARetorno: TStrings);
+var
+  VObj: TLeitorExtratoCartaoGoodCard;
+  VParc: TParcelaCartao;
+begin
+  VObj := TLeitorExtratoCartaoGoodCard.Create(FOwner);
+  try
+    VObj.LerExtrato(ARetorno);
+    for VParc in VObj.Parcelas do
+      Parcelas.Add(VParc.Clone);
   finally
     VObj.Free;
   end;
@@ -117,6 +134,8 @@ begin
         Layout2(VRetorno);
       3:
         Layout3(VRetorno);
+      4:
+        Layout4(VRetorno);
     else
       raise Exception.CreateResFmt(@SARQUIVO_FORA_FORMATO, [ANomeArq]);
     end;
@@ -134,6 +153,8 @@ begin
     Exit(2);
   if TLeitorExtratoCartaoSODEXO.ValidaArquivo(AExt) = 1 then
     Exit(3);
+  if TLeitorExtratoCartaoGoodCard.ValidaArquivo(AExt) = 1 then
+    Exit(4);
   Result := 0;
 end;
 
