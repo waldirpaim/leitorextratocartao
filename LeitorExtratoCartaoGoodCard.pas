@@ -41,7 +41,7 @@ begin
   try
     VTmp.AddPair('separador', ';');
     VTmp.AddPair('quote', '"');
-    VTmp.AddPair('linhainicial', '8');
+    VTmp.AddPair('linhainicial', '7');
     VTmp.AddPair('dataprevista', '6');
     VTmp.AddPair('datavenda', '3');
     VTmp.AddPair('numerocartao', '9');
@@ -109,7 +109,7 @@ end;
 
 class function TLeitorExtratoCartaoGoodCard.ValidaArquivo(AExt: TStrings): Integer;
 begin
-  if SameText(Copy(AExt[1], 1, 7), 'Filial:') and SameText(Copy(AExt[2], 1, 18),
+  if SameText(Copy(AExt[0], 1, 7), 'Filial:') and SameText(Copy(AExt[1], 1, 18),
     'Data do pagamento:') then
     Exit(1);
   Result := 0;
