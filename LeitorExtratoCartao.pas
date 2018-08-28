@@ -4,9 +4,6 @@ interface
 
 uses
   Classes,
-{$IFDEF MSWINDOWS}
-  Winapi.Windows,
-{$ENDIF}
   System.Generics.Collections,
   System.IOUtils,
   SysUtils;
